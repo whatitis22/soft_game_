@@ -299,7 +299,7 @@ public class RandomTextSelectorEditor : Editor
         if (GUILayout.Button("지금 랜덤 선택 실행"))
         {
             RandomTextSelector selector = (RandomTextSelector)target;
-            selector.SelectOnce();
+            selector.ReselectNow();
         }
         GUI.enabled = true;
 

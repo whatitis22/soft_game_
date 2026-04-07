@@ -36,8 +36,18 @@ public class RandomTextSelector : MonoBehaviour
     [ContextMenu("지금 랜덤 선택 실행")]
     public void SelectOnce()
     {
-        if (hasSelected) return;
-        hasSelected = true;
+        SelectInternal(forceReselect: false);
+    }
+
+    public void ReselectNow()
+    {
+        SelectInternal(forceReselect: true);
+    }
+
+    private void SelectInternal(bool forceReselect)
+    {
+        if (hasSelected && !forceReselect)
+            return;
 
         if (targetText == null)
         {
@@ -88,8 +98,6 @@ public class RandomTextSelector : MonoBehaviour
         }
         else
         {
-            // 전부 직접 입력했는데 합이 100 미만인 경우:
-            // 입력값 자체를 비율(가중치)처럼 사용해서 하나를 반드시 뽑음
             if (specifiedSum <= 0f)
             {
                 Debug.LogWarning("[RandomTextSelector] 모든 확률이 0이라 선택할 수 없습니다.");
@@ -131,15 +139,20 @@ public class RandomTextSelector : MonoBehaviour
             }
         }
 
+        hasSelected = true;
         targetText.text = entries[selectedIndex].text;
 
         if (printDebugLog)
         {
-            string log = "[RandomTextSelector] 최종 확률표\n";
+            string log = forceReselect
+                ? "[RandomTextSelector] 강제 재선택 결과\n"
+                : "[RandomTextSelector] 최종 확률표\n";
+
             for (int i = 0; i < entries.Count; i++)
             {
                 log += $"- {entries[i].text} : {finalProbabilities[i]}%\n";
             }
+
             log += $"=> 선택 결과: {entries[selectedIndex].text}";
             Debug.Log(log);
         }
