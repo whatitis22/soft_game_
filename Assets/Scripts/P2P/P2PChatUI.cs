@@ -1,40 +1,81 @@
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
 
 [DisallowMultipleComponent]
 public class P2PChatUI : MonoBehaviour
 {
     public static P2PChatUI Instance { get; private set; }
 
-    [Header("SetActive 제어용 루트")]
+    [Header("초기 접속 UI 루트")]
     [SerializeField] private GameObject hostButtonRoot;
     [SerializeField] private GameObject clientButtonRoot;
     [SerializeField] private GameObject nicknameInputRoot;
     [SerializeField] private GameObject ipInputRoot;
     [SerializeField] private GameObject joinButtonRoot;
 
-    [Header("실제 UI 참조")]
+    [Header("초기 접속 UI 참조")]
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_InputField ipInput;
+
+    [Header("상태 텍스트")]
     [SerializeField] private TMP_Text statusText;
+    [SerializeField] private string initialStatusText = "닉네임을 입력하세요.";
+    [SerializeField] private float statusClearDelay = 3f;
+
+    [Header("채팅 팝업")]
+    [SerializeField] private GameObject chatToggleButtonRoot;
+    [SerializeField] private Button chatToggleButton;
+    [SerializeField] private GameObject chatPopupRoot;
+    [SerializeField] private Button chatPopupCloseButton;
+
+    [Header("채팅 히스토리")]
+    [SerializeField] private ScrollRect historyScrollRect;
+    [SerializeField] private RectTransform historyContent;
+    [SerializeField] private ChatNormalBlockView normalBlockPrefab;
+    [SerializeField] private ChatNarrationBlockView narrationBlockPrefab;
+    [SerializeField] private GameObject dividerBlockPrefab;
+
+    [Header("채팅 입력")]
+    [SerializeField] private GameObject chatInputRoot;
+    [SerializeField] private TMP_InputField chatInputField;
+    [SerializeField] private Button chatSendButton;
+    [SerializeField] private TMP_Text chatCountText;
+    [SerializeField] private int chatCharacterLimit = 100;
+
+    private Coroutine statusClearCoroutine;
+    private Coroutine scrollCoroutine;
 
     private void Awake()
     {
         Instance = this;
-
-        hostButton.onClick.AddListener(OnClickHost);
-        clientButton.onClick.AddListener(OnClickClient);
-        joinButton.onClick.AddListener(OnClickJoin);
     }
 
     private void Start()
     {
+        hostButton.onClick.AddListener(OnClickHost);
+        clientButton.onClick.AddListener(OnClickClient);
+        joinButton.onClick.AddListener(OnClickJoin);
+
+        chatToggleButton.onClick.AddListener(ToggleChatPopup);
+        chatPopupCloseButton.onClick.AddListener(CloseChatPopup);
+
+        chatSendButton.onClick.AddListener(TrySendChatFromInput);
+
+        chatInputField.lineType = TMP_InputField.LineType.SingleLine;
+        chatInputField.characterLimit = chatCharacterLimit;
+        chatInputField.onValueChanged.AddListener(_ => RefreshChatCountText());
+        chatInputField.onSubmit.AddListener(_ => TrySendChatFromInput());
+
         ResetToInitialState();
-        SetStatus("닉네임을 입력하세요.");
+        RefreshChatCountText();
+        SetStatus(initialStatusText, false);
     }
 
     public void ResetToInitialState()
@@ -45,6 +86,10 @@ public class P2PChatUI : MonoBehaviour
 
         ipInputRoot.SetActive(false);
         joinButtonRoot.SetActive(false);
+
+        chatToggleButtonRoot.SetActive(false);
+        chatPopupRoot.SetActive(false);
+        chatInputRoot.SetActive(false);
     }
 
     private void HideFirstStepUI()
@@ -54,14 +99,53 @@ public class P2PChatUI : MonoBehaviour
         nicknameInputRoot.SetActive(false);
     }
 
-    private string GetNickname()
+    public void EnterRoomAsHost()
     {
-        return nicknameInput.text.Trim();
+        chatToggleButtonRoot.SetActive(true);
+        chatInputRoot.SetActive(true);
+        chatPopupRoot.SetActive(false);
+    }
+
+    public void EnterRoomAsClient()
+    {
+        ipInputRoot.SetActive(false);
+        joinButtonRoot.SetActive(false);
+
+        chatToggleButtonRoot.SetActive(true);
+        chatInputRoot.SetActive(true);
+        chatPopupRoot.SetActive(false);
+    }
+
+    public void SetStatus(string message, bool autoClear = true)
+    {
+        if (statusText == null)
+            return;
+
+        statusText.text = message ?? string.Empty;
+
+        if (statusClearCoroutine != null)
+        {
+            StopCoroutine(statusClearCoroutine);
+            statusClearCoroutine = null;
+        }
+
+        if (autoClear && !string.IsNullOrEmpty(message))
+            statusClearCoroutine = StartCoroutine(CoClearStatusAfterDelay());
+    }
+
+    private IEnumerator CoClearStatusAfterDelay()
+    {
+        yield return new WaitForSeconds(statusClearDelay);
+
+        if (statusText != null)
+            statusText.text = string.Empty;
+
+        statusClearCoroutine = null;
     }
 
     private void OnClickHost()
     {
-        string nickname = GetNickname();
+        string nickname = nicknameInput.text.Trim();
 
         if (string.IsNullOrWhiteSpace(nickname))
         {
@@ -70,15 +154,15 @@ public class P2PChatUI : MonoBehaviour
         }
 
         HideFirstStepUI();
-        ipInputRoot.SetActive(false);
-        joinButtonRoot.SetActive(false);
 
-        P2PChatBootstrap.Instance.StartHost(nickname);
+        bool success = P2PChatBootstrap.Instance.StartHost(nickname);
+        if (!success)
+            ResetToInitialState();
     }
 
     private void OnClickClient()
     {
-        string nickname = GetNickname();
+        string nickname = nicknameInput.text.Trim();
 
         if (string.IsNullOrWhiteSpace(nickname))
         {
@@ -107,9 +191,100 @@ public class P2PChatUI : MonoBehaviour
         P2PChatBootstrap.Instance.StartClient(ip);
     }
 
-    public void SetStatus(string message)
+    private void ToggleChatPopup()
     {
-        if (statusText != null)
-            statusText.text = message;
+        chatPopupRoot.SetActive(!chatPopupRoot.activeSelf);
+
+        if (chatPopupRoot.activeSelf)
+            ScrollToBottomDeferred();
+    }
+
+    private void CloseChatPopup()
+    {
+        chatPopupRoot.SetActive(false);
+    }
+
+    private void TrySendChatFromInput()
+    {
+        if (P2PChatSession.Instance == null)
+            return;
+
+        string text = chatInputField.text;
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        bool sent = P2PChatSession.Instance.TrySendLocalChat(text);
+        if (!sent)
+            return;
+
+        chatInputField.text = string.Empty;
+        RefreshChatCountText();
+        chatInputField.ActivateInputField();
+    }
+
+    private void RefreshChatCountText()
+    {
+        if (chatCountText == null || chatInputField == null)
+            return;
+
+        int current = string.IsNullOrEmpty(chatInputField.text) ? 0 : chatInputField.text.Length;
+        chatCountText.text = $"{current}/{chatCharacterLimit}";
+    }
+
+    public void RefreshHistory(NetworkList<P2PChatEntry> entries)
+    {
+        if (historyContent == null)
+            return;
+
+        for (int i = historyContent.childCount - 1; i >= 0; i--)
+            Destroy(historyContent.GetChild(i).gameObject);
+
+        foreach (P2PChatEntry entry in entries)
+        {
+            switch (entry.EntryType)
+            {
+                case P2PChatEntryType.Normal:
+                    {
+                        ChatNormalBlockView block = Instantiate(normalBlockPrefab, historyContent);
+                        block.Bind(entry.Sender.ToString(), entry.Message.ToString());
+                        break;
+                    }
+
+                case P2PChatEntryType.Narration:
+                    {
+                        ChatNarrationBlockView block = Instantiate(narrationBlockPrefab, historyContent);
+                        block.Bind(entry.Message.ToString());
+                        break;
+                    }
+
+                case P2PChatEntryType.Divider:
+                    {
+                        Instantiate(dividerBlockPrefab, historyContent);
+                        break;
+                    }
+            }
+        }
+
+        ScrollToBottomDeferred();
+    }
+
+    private void ScrollToBottomDeferred()
+    {
+        if (scrollCoroutine != null)
+            StopCoroutine(scrollCoroutine);
+
+        scrollCoroutine = StartCoroutine(CoScrollToBottomNextFrame());
+    }
+
+    private IEnumerator CoScrollToBottomNextFrame()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(historyContent);
+
+        if (historyScrollRect != null)
+            historyScrollRect.verticalNormalizedPosition = 0f;
+
+        scrollCoroutine = null;
     }
 }

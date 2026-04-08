@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
@@ -17,14 +16,13 @@ public class P2PChatBootstrap : MonoBehaviour
 
     [Header("네트워크 설정")]
     [SerializeField] private ushort port = 7777;
-    [SerializeField] private int maxParticipants = 5; // 호스트 포함 5명
+    [SerializeField] private int maxParticipants = 5; // 호스트 포함
     [SerializeField] private float connectTimeoutSeconds = 8f;
 
     private NetworkManager networkManager;
     private UnityTransport transport;
 
     private readonly Dictionary<ulong, string> approvedNicknames = new();
-    private readonly List<ChatHistoryEntry> chatHistory = new();
 
     private string localNickname;
     private string hostNickname;
@@ -33,24 +31,9 @@ public class P2PChatBootstrap : MonoBehaviour
     private bool clientJoinConfirmed;
     private Coroutine connectTimeoutRoutine;
 
-    [Serializable]
-    public struct ChatHistoryEntry
-    {
-        public string sender;
-        public string message;
-        public string timestamp;
-
-        public ChatHistoryEntry(string sender, string message, string timestamp)
-        {
-            this.sender = sender;
-            this.message = message;
-            this.timestamp = timestamp;
-        }
-    }
-
-    public IReadOnlyList<ChatHistoryEntry> ChatHistory => chatHistory;
     public string HostNickname => hostNickname;
     public string LocalNickname => localNickname;
+    public int MaxParticipants => maxParticipants;
 
     private void Awake()
     {
@@ -73,6 +56,7 @@ public class P2PChatBootstrap : MonoBehaviour
     {
         networkManager.OnClientConnectedCallback += HandleClientConnected;
         networkManager.OnClientDisconnectCallback += HandleClientDisconnected;
+        networkManager.OnTransportFailure += HandleTransportFailure;
     }
 
     private void OnDisable()
@@ -82,6 +66,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
         networkManager.OnClientConnectedCallback -= HandleClientConnected;
         networkManager.OnClientDisconnectCallback -= HandleClientDisconnected;
+        networkManager.OnTransportFailure -= HandleTransportFailure;
     }
 
     public void PrepareClient(string nickname)
@@ -92,7 +77,7 @@ public class P2PChatBootstrap : MonoBehaviour
         StopConnectTimeout();
     }
 
-    public void StartHost(string nickname)
+    public bool StartHost(string nickname)
     {
         ShutdownIfNeeded();
 
@@ -100,9 +85,8 @@ public class P2PChatBootstrap : MonoBehaviour
         hostNickname = localNickname;
 
         approvedNicknames.Clear();
-        chatHistory.Clear();
 
-        // host 자신의 로컬 클라이언트는 loopback으로 붙고,
+        // 호스트 자신의 로컬 클라이언트는 loopback,
         // 서버는 모든 IPv4 인터페이스에서 수신.
         transport.SetConnectionData("127.0.0.1", port, "0.0.0.0");
         networkManager.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(localNickname);
@@ -111,22 +95,25 @@ public class P2PChatBootstrap : MonoBehaviour
         if (!started)
         {
             P2PChatUI.Instance.SetStatus("방 생성에 실패했습니다.");
-            P2PChatUI.Instance.ResetToInitialState();
-            return;
+            return false;
         }
 
         approvedNicknames[NetworkManager.ServerClientId] = localNickname;
+
+        P2PChatUI.Instance.EnterRoomAsHost();
         P2PChatUI.Instance.SetStatus("방이 생성되었습니다.");
+
+        return true;
     }
 
-    public void StartClient(string ip)
+    public bool StartClient(string ip)
     {
         string trimmedIp = string.IsNullOrWhiteSpace(ip) ? "127.0.0.1" : ip.Trim();
 
         if (!IsValidIpv4(trimmedIp))
         {
             P2PChatUI.Instance.SetStatus("유효하지 않은 IPv4 주소입니다.");
-            return;
+            return false;
         }
 
         ShutdownIfNeeded();
@@ -142,10 +129,41 @@ public class P2PChatBootstrap : MonoBehaviour
         {
             clientJoinPending = false;
             P2PChatUI.Instance.SetStatus("입장에 실패했습니다.");
-            return;
+            return false;
         }
 
         RestartConnectTimeout();
+        return true;
+    }
+
+    public void NotifyClientJoinedRoom(string connectedHostNickname)
+    {
+        if (clientJoinConfirmed)
+            return;
+
+        clientJoinPending = false;
+        clientJoinConfirmed = true;
+        hostNickname = connectedHostNickname;
+
+        StopConnectTimeout();
+
+        P2PChatUI.Instance.EnterRoomAsClient();
+        P2PChatUI.Instance.SetStatus($"{connectedHostNickname} 님의 방에 입장했습니다.");
+    }
+
+    public bool TryGetNickname(ulong clientId, out string nickname)
+    {
+        if (approvedNicknames.TryGetValue(clientId, out nickname))
+            return true;
+
+        if (clientId == NetworkManager.ServerClientId && !string.IsNullOrWhiteSpace(hostNickname))
+        {
+            nickname = hostNickname;
+            return true;
+        }
+
+        nickname = string.Empty;
+        return false;
     }
 
     private void ApprovalCheck(NetworkManager.ConnectionApprovalRequest request,
@@ -162,7 +180,6 @@ public class P2PChatBootstrap : MonoBehaviour
             return;
         }
 
-        // host 포함 최대 인원 제한
         if (networkManager.ConnectedClientsIds.Count >= maxParticipants)
         {
             response.Approved = false;
@@ -175,13 +192,12 @@ public class P2PChatBootstrap : MonoBehaviour
         approvedNicknames[request.ClientNetworkId] = requestedNickname;
 
         response.Approved = true;
-        response.CreatePlayerObject = false; // 아직 플레이어 오브젝트 없음
+        response.CreatePlayerObject = false;
         response.Pending = false;
     }
 
     private void HandleClientConnected(ulong clientId)
     {
-        // 서버/호스트 쪽: 새 클라이언트 입장 메시지
         if (networkManager.IsServer && clientId != NetworkManager.ServerClientId)
         {
             if (approvedNicknames.TryGetValue(clientId, out string nickname))
@@ -194,41 +210,32 @@ public class P2PChatBootstrap : MonoBehaviour
     private void HandleClientDisconnected(ulong clientId)
     {
         if (networkManager.IsServer)
-        {
             approvedNicknames.Remove(clientId);
-        }
 
-        // 클라이언트 본인 연결 실패 처리
         if (!networkManager.IsServer && clientId == networkManager.LocalClientId)
         {
-            if (clientJoinConfirmed)
-                return;
-
-            if (!clientJoinPending)
-                return;
-
-            clientJoinPending = false;
             StopConnectTimeout();
 
-            string reason = networkManager.DisconnectReason;
+            if (!clientJoinConfirmed)
+            {
+                clientJoinPending = false;
 
-            if (string.IsNullOrWhiteSpace(reason))
-                P2PChatUI.Instance.SetStatus("해당 IP에 방이 존재하지 않습니다.");
-            else
-                P2PChatUI.Instance.SetStatus(reason);
+                string reason = networkManager.DisconnectReason;
+                if (string.IsNullOrWhiteSpace(reason))
+                    P2PChatUI.Instance.SetStatus("해당 IP에 방이 존재하지 않습니다.");
+                else
+                    P2PChatUI.Instance.SetStatus(reason);
+
+                return;
+            }
+
+            P2PChatUI.Instance.SetStatus("서버와의 연결이 종료되었습니다.");
         }
     }
 
-    public void NotifyClientJoinedRoom(string connectedHostNickname)
+    private void HandleTransportFailure()
     {
-        if (clientJoinConfirmed)
-            return;
-
-        clientJoinPending = false;
-        clientJoinConfirmed = true;
-        StopConnectTimeout();
-
-        P2PChatUI.Instance.SetStatus($"{connectedHostNickname} 님의 방에 입장했습니다.");
+        P2PChatUI.Instance.SetStatus("네트워크 오류가 발생했습니다.");
     }
 
     private void RestartConnectTimeout()
@@ -273,8 +280,8 @@ public class P2PChatBootstrap : MonoBehaviour
 
     private bool IsValidIpv4(string value)
     {
-        return IPAddress.TryParse(value, out IPAddress address) &&
-               address.AddressFamily == AddressFamily.InterNetwork;
+        return IPAddress.TryParse(value, out IPAddress address)
+            && address.AddressFamily == AddressFamily.InterNetwork;
     }
 
     private string DecodeNickname(byte[] payload)
