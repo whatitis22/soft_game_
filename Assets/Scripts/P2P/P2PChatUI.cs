@@ -24,6 +24,10 @@ public class P2PChatUI : MonoBehaviour
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_InputField ipInput;
 
+    [Header("닉네임 입력")]
+    [SerializeField] private TMP_Text nicknameCountText;
+    [SerializeField] private int nicknameCharacterLimit = 12;
+
     [Header("상태 텍스트")]
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private string initialStatusText = "닉네임을 입력하세요.";
@@ -68,13 +72,22 @@ public class P2PChatUI : MonoBehaviour
 
         chatSendButton.onClick.AddListener(TrySendChatFromInput);
 
+        // 채팅 입력창
         chatInputField.lineType = TMP_InputField.LineType.SingleLine;
         chatInputField.characterLimit = chatCharacterLimit;
         chatInputField.onValueChanged.AddListener(_ => RefreshChatCountText());
         chatInputField.onSubmit.AddListener(_ => TrySendChatFromInput());
 
+        // 닉네임 입력창
+        nicknameInput.lineType = TMP_InputField.LineType.SingleLine;
+        nicknameInput.characterLimit = nicknameCharacterLimit;
+        nicknameInput.onValueChanged.AddListener(OnNicknameValueChanged);
+
         ResetToInitialState();
+
         RefreshChatCountText();
+        RefreshNicknameCountText();
+
         SetStatus(initialStatusText, false);
     }
 
@@ -97,6 +110,40 @@ public class P2PChatUI : MonoBehaviour
         hostButtonRoot.SetActive(false);
         clientButtonRoot.SetActive(false);
         nicknameInputRoot.SetActive(false);
+    }
+
+    private void OnNicknameValueChanged(string value)
+    {
+        string trimmed = value.Trim();
+
+        // 앞뒤 공백 자동 제거
+        if (value != trimmed)
+        {
+            nicknameInput.SetTextWithoutNotify(trimmed);
+        }
+
+        RefreshNicknameCountText();
+    }
+
+    private void RefreshNicknameCountText()
+    {
+        if (nicknameCountText == null || nicknameInput == null)
+            return;
+
+        int current = string.IsNullOrEmpty(nicknameInput.text) ? 0 : nicknameInput.text.Length;
+        nicknameCountText.text = $"{current}/{nicknameCharacterLimit}";
+    }
+    private bool TryGetValidNickname(out string nickname)
+    {
+        nickname = nicknameInput.text.Trim();
+
+        if (string.IsNullOrWhiteSpace(nickname))
+        {
+            SetStatus("닉네임은 공백만 입력할 수 없습니다.");
+            return false;
+        }
+
+        return true;
     }
 
     public void EnterRoomAsHost()
@@ -145,13 +192,8 @@ public class P2PChatUI : MonoBehaviour
 
     private void OnClickHost()
     {
-        string nickname = nicknameInput.text.Trim();
-
-        if (string.IsNullOrWhiteSpace(nickname))
-        {
-            SetStatus("닉네임을 입력해야 합니다.");
+        if (!TryGetValidNickname(out string nickname))
             return;
-        }
 
         HideFirstStepUI();
 
@@ -162,13 +204,8 @@ public class P2PChatUI : MonoBehaviour
 
     private void OnClickClient()
     {
-        string nickname = nicknameInput.text.Trim();
-
-        if (string.IsNullOrWhiteSpace(nickname))
-        {
-            SetStatus("닉네임을 입력해야 합니다.");
+        if (!TryGetValidNickname(out string nickname))
             return;
-        }
 
         HideFirstStepUI();
         ipInputRoot.SetActive(true);
