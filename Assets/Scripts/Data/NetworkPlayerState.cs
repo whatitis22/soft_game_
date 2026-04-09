@@ -49,13 +49,13 @@ public class NetworkPlayerState : NetworkBehaviour
         }
     }
 
-    public void ServerInitializePlayer(int playerIndex, JobType jobType)
+    public void ServerInitializePlayer(int playerIndex, JobType initialJob)
     {
         if (!IsServer)
             return;
 
         PlayerIndex.Value = playerIndex;
-        Job.Value = jobType;
+        Job.Value = initialJob;
 
         CrystalRed.Value = 0;
         CrystalBlue.Value = 0;
@@ -65,6 +65,7 @@ public class NetworkPlayerState : NetworkBehaviour
         InventoryItemIds.Clear();
     }
 
+
     public void ServerAddCrystals(int redDelta, int blueDelta, int greenDelta)
     {
         if (!IsServer)
@@ -73,6 +74,14 @@ public class NetworkPlayerState : NetworkBehaviour
         CrystalRed.Value = Mathf.Max(0, CrystalRed.Value + redDelta);
         CrystalBlue.Value = Mathf.Max(0, CrystalBlue.Value + blueDelta);
         CrystalGreen.Value = Mathf.Max(0, CrystalGreen.Value + greenDelta);
+    }
+
+    public void ServerSetJob(JobType newJob)
+    {
+        if (!IsServer)
+            return;
+
+        Job.Value = newJob;
     }
 
     public void ServerAddItem(ItemId itemId)
@@ -137,5 +146,21 @@ public class NetworkPlayerState : NetworkBehaviour
 
         ServerConsumeNumberCard(cardValue);
         Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} »ç¿ë");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestChangeJobRpc(JobType targetJob, RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (senderId != OwnerClientId)
+            return;
+
+        if (JobSelectionManager.Instance == null)
+            return;
+
+        JobSelectionManager.Instance.ServerTryAssignJob(this, targetJob);
     }
 }

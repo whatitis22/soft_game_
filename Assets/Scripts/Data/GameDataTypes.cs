@@ -1,11 +1,15 @@
 public enum JobType
 {
     None = 0,
-    Cook = 1,
-    Engineer = 2,
-    Doctor = 3,
-    Merchant = 4,
-    Explorer = 5
+
+    Hero = 1,      // 용사
+    Saint = 2,     // 성녀
+    Witch = 3,     // 마녀
+    Archer = 4,    // 궁수
+    Fighter = 5,   // 격투가
+    Butcher = 6,   // 도살자
+    Guardian = 7,  // 수호자
+    Assassin = 8   // 암살자
 }
 
 public enum QuestStageType

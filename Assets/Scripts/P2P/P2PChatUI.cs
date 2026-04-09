@@ -47,7 +47,9 @@ public class P2PChatUI : MonoBehaviour
     [SerializeField] private GameObject dividerBlockPrefab;
 
     [Header("채팅 입력")]
-    [SerializeField] private GameObject RobbyThingsRoot;
+    [SerializeField] private GameObject lobbyThingsRoot;
+    [SerializeField] private Button jobSelectButton;
+    [SerializeField] private JobSelectionPopupUI jobSelectionPopupUI;
     [SerializeField] private TMP_InputField chatInputField;
     [SerializeField] private Button chatSendButton;
     [SerializeField] private TMP_Text chatCountText;
@@ -71,14 +73,13 @@ public class P2PChatUI : MonoBehaviour
         chatPopupCloseButton.onClick.AddListener(CloseChatPopup);
 
         chatSendButton.onClick.AddListener(TrySendChatFromInput);
+        jobSelectButton.onClick.AddListener(OnClickJobSelectButton);
 
-        // 채팅 입력창
         chatInputField.lineType = TMP_InputField.LineType.SingleLine;
         chatInputField.characterLimit = chatCharacterLimit;
         chatInputField.onValueChanged.AddListener(_ => RefreshChatCountText());
         chatInputField.onSubmit.AddListener(_ => TrySendChatFromInput());
 
-        // 닉네임 입력창
         nicknameInput.lineType = TMP_InputField.LineType.SingleLine;
         nicknameInput.characterLimit = nicknameCharacterLimit;
         nicknameInput.onValueChanged.AddListener(OnNicknameValueChanged);
@@ -102,7 +103,7 @@ public class P2PChatUI : MonoBehaviour
 
         chatToggleButtonRoot.SetActive(false);
         chatPopupRoot.SetActive(false);
-        RobbyThingsRoot.SetActive(false);
+        lobbyThingsRoot.SetActive(false);
     }
 
     private void HideFirstStepUI()
@@ -149,7 +150,7 @@ public class P2PChatUI : MonoBehaviour
     public void EnterRoomAsHost()
     {
         chatToggleButtonRoot.SetActive(true);
-        RobbyThingsRoot.SetActive(true);
+        lobbyThingsRoot.SetActive(true);
         chatPopupRoot.SetActive(false);
     }
 
@@ -159,7 +160,7 @@ public class P2PChatUI : MonoBehaviour
         joinButtonRoot.SetActive(false);
 
         chatToggleButtonRoot.SetActive(true);
-        RobbyThingsRoot.SetActive(true);
+        lobbyThingsRoot.SetActive(true);
         chatPopupRoot.SetActive(false);
     }
 
@@ -323,5 +324,11 @@ public class P2PChatUI : MonoBehaviour
             historyScrollRect.verticalNormalizedPosition = 0f;
 
         scrollCoroutine = null;
+    }
+
+    private void OnClickJobSelectButton()
+    {
+        if (jobSelectionPopupUI != null)
+            jobSelectionPopupUI.TogglePopup();
     }
 }

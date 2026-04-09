@@ -83,10 +83,13 @@ public class PlayerIndexAssigner : MonoBehaviour
             int newIndex = GetNextAvailableIndex();
             assignedIndices.Add(clientId, newIndex);
 
-            // 기본 직업은 None으로 시작
-            playerState.ServerInitializePlayer(newIndex, JobType.None);
+            JobType autoJob = JobType.None;
+            if (JobSelectionManager.Instance != null)
+                autoJob = JobSelectionManager.Instance.GetFirstAvailableJob();
 
-            Debug.Log($"[PlayerIndexAssigner] clientId={clientId} -> PlayerIndex={newIndex}");
+            playerState.ServerInitializePlayer(newIndex, autoJob);
+
+            Debug.Log($"[PlayerIndexAssigner] clientId={clientId} -> PlayerIndex={newIndex}, Job={autoJob}");
         }
     }
 
