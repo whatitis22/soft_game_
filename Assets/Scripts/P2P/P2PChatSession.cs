@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -17,15 +16,12 @@ public class P2PChatSession : NetworkBehaviour
     [SerializeField] private string editorTestNarrationText = "테스트 나레이션";
     [SerializeField] private bool logDebugMessages;
 
-    private readonly NetworkVariable<FixedString512Bytes> hostNickname =
-        new(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-    private NetworkList<P2PChatEntry> history;
-
     private readonly Dictionary<ulong, Queue<float>> recentMessageTimes = new();
     private readonly Dictionary<ulong, float> mutedUntilTimes = new();
 
     private bool clientRoomJoinMessageShown;
+
+    private NetworkSessionState Session => NetworkSessionState.Instance;
 
     private void Awake()
     {
@@ -36,23 +32,18 @@ public class P2PChatSession : NetworkBehaviour
         }
 
         Instance = this;
-        history = new NetworkList<P2PChatEntry>();
     }
 
     public override void OnNetworkSpawn()
     {
-        history.OnListChanged += OnHistoryChanged;
-        hostNickname.OnValueChanged += OnHostNicknameChanged;
+        if (Session != null)
+        {
+            Session.ChatHistory.OnListChanged += OnHistoryChanged;
+            Session.HostNickname.OnValueChanged += OnHostNicknameChanged;
+        }
 
         if (IsServer)
-        {
-            string nick = P2PChatBootstrap.Instance != null
-                ? P2PChatBootstrap.Instance.HostNickname
-                : string.Empty;
-
-            hostNickname.Value = new FixedString512Bytes(nick);
             NetworkManager.OnClientDisconnectCallback += OnClientDisconnectedOnServer;
-        }
 
         RefreshHistoryUI();
         TryNotifyClientJoinedRoom();
@@ -60,8 +51,11 @@ public class P2PChatSession : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        history.OnListChanged -= OnHistoryChanged;
-        hostNickname.OnValueChanged -= OnHostNicknameChanged;
+        if (Session != null)
+        {
+            Session.ChatHistory.OnListChanged -= OnHistoryChanged;
+            Session.HostNickname.OnValueChanged -= OnHostNicknameChanged;
+        }
 
         if (NetworkManager != null && IsServer)
             NetworkManager.OnClientDisconnectCallback -= OnClientDisconnectedOnServer;
@@ -71,7 +65,7 @@ public class P2PChatSession : NetworkBehaviour
 
     public bool TrySendLocalChat(string rawText)
     {
-        if (!IsSpawned)
+        if (!IsSpawned || Session == null)
             return false;
 
         string trimmed = (rawText ?? string.Empty).Trim();
@@ -81,59 +75,54 @@ public class P2PChatSession : NetworkBehaviour
         string filtered = ApplyForbiddenWordFilterStub(trimmed);
 
         if (IsServer)
-        {
             return TryAcceptChatOnServer(NetworkManager.LocalClientId, filtered);
-        }
 
-        SubmitChatRpc(new FixedString512Bytes(filtered));
+        SubmitChatRpc(filtered);
         return true;
     }
 
     public void AddNarrationFromLocal(string narrationText)
     {
         string trimmed = (narrationText ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(trimmed))
+        if (string.IsNullOrWhiteSpace(trimmed) || Session == null)
             return;
 
         if (IsServer)
-        {
-            AddNarrationOnServer(trimmed);
-        }
+            Session.ServerAddNarration(trimmed);
         else
-        {
-            AddNarrationRpc(new FixedString512Bytes(trimmed));
-        }
+            AddNarrationRpc(trimmed);
     }
 
     public void AddDividerFromLocal()
     {
+        if (Session == null)
+            return;
+
         if (IsServer)
-        {
-            AddDividerOnServer();
-        }
+            Session.ServerAddDivider();
         else
-        {
             AddDividerRpc();
-        }
     }
 
     [Rpc(SendTo.Server)]
-    private void SubmitChatRpc(FixedString512Bytes message, RpcParams rpcParams = default)
+    private void SubmitChatRpc(string message, RpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
-        TryAcceptChatOnServer(senderId, message.ToString());
+        TryAcceptChatOnServer(senderId, message);
     }
 
     [Rpc(SendTo.Server)]
-    private void AddNarrationRpc(FixedString512Bytes narrationText)
+    private void AddNarrationRpc(string narrationText)
     {
-        AddNarrationOnServer(narrationText.ToString());
+        if (Session == null) return;
+        Session.ServerAddNarration(narrationText);
     }
 
     [Rpc(SendTo.Server)]
     private void AddDividerRpc()
     {
-        AddDividerOnServer();
+        if (Session == null) return;
+        Session.ServerAddDivider();
     }
 
     [ClientRpc]
@@ -144,6 +133,9 @@ public class P2PChatSession : NetworkBehaviour
 
     private bool TryAcceptChatOnServer(ulong senderId, string message)
     {
+        if (Session == null)
+            return false;
+
         float now = Time.unscaledTime;
 
         if (mutedUntilTimes.TryGetValue(senderId, out float mutedUntil) && now < mutedUntil)
@@ -178,22 +170,12 @@ public class P2PChatSession : NetworkBehaviour
             senderNickname = approvedNickname;
         }
 
-        history.Add(new P2PChatEntry(P2PChatEntryType.Normal, senderNickname, message));
+        Session.ServerAddNormalChat(senderNickname, message);
 
         if (logDebugMessages)
             Debug.Log($"[Chat] {senderNickname}: {message}");
 
         return true;
-    }
-
-    private void AddNarrationOnServer(string narrationText)
-    {
-        history.Add(new P2PChatEntry(P2PChatEntryType.Narration, string.Empty, narrationText));
-    }
-
-    private void AddDividerOnServer()
-    {
-        history.Add(new P2PChatEntry(P2PChatEntryType.Divider, string.Empty, string.Empty));
     }
 
     private void WarnOneClient(ulong clientId, string message)
@@ -240,17 +222,18 @@ public class P2PChatSession : NetworkBehaviour
         RefreshHistoryUI();
     }
 
-    private void OnHostNicknameChanged(FixedString512Bytes previousValue, FixedString512Bytes newValue)
+    private void OnHostNicknameChanged(Unity.Collections.FixedString128Bytes previousValue,
+                                       Unity.Collections.FixedString128Bytes newValue)
     {
         TryNotifyClientJoinedRoom();
     }
 
     private void TryNotifyClientJoinedRoom()
     {
-        if (!IsClient || IsServer || clientRoomJoinMessageShown)
+        if (!IsClient || IsServer || clientRoomJoinMessageShown || Session == null)
             return;
 
-        string nick = hostNickname.Value.ToString();
+        string nick = Session.HostNickname.Value.ToString();
         if (string.IsNullOrWhiteSpace(nick))
             return;
 
@@ -260,15 +243,14 @@ public class P2PChatSession : NetworkBehaviour
 
     private void RefreshHistoryUI()
     {
-        if (P2PChatUI.Instance == null)
+        if (P2PChatUI.Instance == null || Session == null)
             return;
 
-        P2PChatUI.Instance.RefreshHistory(history);
+        P2PChatUI.Instance.RefreshHistory(Session.ChatHistory);
     }
 
     private string ApplyForbiddenWordFilterStub(string rawText)
     {
-        // 금칙어 기능은 나중 단계에서 구현.
         return rawText;
     }
 

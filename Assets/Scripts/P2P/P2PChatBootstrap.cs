@@ -86,8 +86,6 @@ public class P2PChatBootstrap : MonoBehaviour
 
         approvedNicknames.Clear();
 
-        // 호스트 자신의 로컬 클라이언트는 loopback,
-        // 서버는 모든 IPv4 인터페이스에서 수신.
         transport.SetConnectionData("127.0.0.1", port, "0.0.0.0");
         networkManager.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(localNickname);
 
@@ -99,6 +97,14 @@ public class P2PChatBootstrap : MonoBehaviour
         }
 
         approvedNicknames[NetworkManager.ServerClientId] = localNickname;
+
+        if (NetworkSessionState.Instance != null)
+        {
+            NetworkSessionState.Instance.ServerSetHostInfo(
+                NetworkManager.ServerClientId,
+                localNickname
+            );
+        }
 
         P2PChatUI.Instance.EnterRoomAsHost();
         P2PChatUI.Instance.SetStatus("방이 생성되었습니다.");

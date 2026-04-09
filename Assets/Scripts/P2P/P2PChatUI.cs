@@ -47,7 +47,7 @@ public class P2PChatUI : MonoBehaviour
     [SerializeField] private GameObject dividerBlockPrefab;
 
     [Header("채팅 입력")]
-    [SerializeField] private GameObject chatInputRoot;
+    [SerializeField] private GameObject RobbyThingsRoot;
     [SerializeField] private TMP_InputField chatInputField;
     [SerializeField] private Button chatSendButton;
     [SerializeField] private TMP_Text chatCountText;
@@ -102,7 +102,7 @@ public class P2PChatUI : MonoBehaviour
 
         chatToggleButtonRoot.SetActive(false);
         chatPopupRoot.SetActive(false);
-        chatInputRoot.SetActive(false);
+        RobbyThingsRoot.SetActive(false);
     }
 
     private void HideFirstStepUI()
@@ -149,7 +149,7 @@ public class P2PChatUI : MonoBehaviour
     public void EnterRoomAsHost()
     {
         chatToggleButtonRoot.SetActive(true);
-        chatInputRoot.SetActive(true);
+        RobbyThingsRoot.SetActive(true);
         chatPopupRoot.SetActive(false);
     }
 
@@ -159,7 +159,7 @@ public class P2PChatUI : MonoBehaviour
         joinButtonRoot.SetActive(false);
 
         chatToggleButtonRoot.SetActive(true);
-        chatInputRoot.SetActive(true);
+        RobbyThingsRoot.SetActive(true);
         chatPopupRoot.SetActive(false);
     }
 
