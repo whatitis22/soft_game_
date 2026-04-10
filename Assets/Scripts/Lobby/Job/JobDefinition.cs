@@ -5,7 +5,12 @@ public class JobDefinition : ScriptableObject
 {
     public JobType jobType;
     public string displayName;
+
+    [Header("직업 선택 팝업")]
     public Sprite portrait;
+
+    [Header("로비 스탠딩")]
+    public Sprite lobbyStandingImage;
 
     [TextArea(2, 4)]
     public string shortDescription;

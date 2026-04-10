@@ -87,9 +87,16 @@ public class PlayerIndexAssigner : MonoBehaviour
             if (JobSelectionManager.Instance != null)
                 autoJob = JobSelectionManager.Instance.GetFirstAvailableJob();
 
-            playerState.ServerInitializePlayer(newIndex, autoJob);
+            string nickname = "Unknown";
+            if (P2PChatBootstrap.Instance != null &&
+                P2PChatBootstrap.Instance.TryGetNickname(clientId, out string approvedNickname))
+            {
+                nickname = approvedNickname;
+            }
 
-            Debug.Log($"[PlayerIndexAssigner] clientId={clientId} -> PlayerIndex={newIndex}, Job={autoJob}");
+            playerState.ServerInitializePlayer(newIndex, nickname, autoJob);
+
+            Debug.Log($"[PlayerIndexAssigner] clientId={clientId} -> PlayerIndex={newIndex}, Nickname={nickname}, Job={autoJob}");
         }
     }
 

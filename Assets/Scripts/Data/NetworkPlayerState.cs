@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -8,6 +9,9 @@ public class NetworkPlayerState : NetworkBehaviour
     [Header("공개 상태")]
     public NetworkVariable<int> PlayerIndex =
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<FixedString64Bytes> DisplayNickname =
+        new(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<JobType> Job =
         new(JobType.None, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -49,12 +53,13 @@ public class NetworkPlayerState : NetworkBehaviour
         }
     }
 
-    public void ServerInitializePlayer(int playerIndex, JobType initialJob)
+    public void ServerInitializePlayer(int playerIndex, string nickname, JobType initialJob)
     {
         if (!IsServer)
             return;
 
         PlayerIndex.Value = playerIndex;
+        DisplayNickname.Value = new FixedString64Bytes(nickname ?? string.Empty);
         Job.Value = initialJob;
 
         CrystalRed.Value = 0;
