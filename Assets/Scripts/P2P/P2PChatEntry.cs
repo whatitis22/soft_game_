@@ -13,12 +13,14 @@ public enum P2PChatEntryType : byte
 public struct P2PChatEntry : INetworkSerializable, IEquatable<P2PChatEntry>
 {
     public P2PChatEntryType EntryType;
+    public ulong SenderClientId;
     public FixedString512Bytes Sender;
     public FixedString512Bytes Message;
 
-    public P2PChatEntry(P2PChatEntryType entryType, string sender, string message)
+    public P2PChatEntry(P2PChatEntryType entryType, ulong senderClientId, string sender, string message)
     {
         EntryType = entryType;
+        SenderClientId = senderClientId;
         Sender = new FixedString512Bytes(sender ?? string.Empty);
         Message = new FixedString512Bytes(message ?? string.Empty);
     }
@@ -26,6 +28,7 @@ public struct P2PChatEntry : INetworkSerializable, IEquatable<P2PChatEntry>
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
         serializer.SerializeValue(ref EntryType);
+        serializer.SerializeValue(ref SenderClientId);
         serializer.SerializeValue(ref Sender);
         serializer.SerializeValue(ref Message);
     }
@@ -33,6 +36,7 @@ public struct P2PChatEntry : INetworkSerializable, IEquatable<P2PChatEntry>
     public bool Equals(P2PChatEntry other)
     {
         return EntryType == other.EntryType
+            && SenderClientId == other.SenderClientId
             && Sender.Equals(other.Sender)
             && Message.Equals(other.Message);
     }

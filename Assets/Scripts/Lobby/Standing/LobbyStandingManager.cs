@@ -184,6 +184,45 @@ public class LobbyStandingManager : MonoBehaviour
         return null;
     }
 
+    public bool TryGetSlotIndexForPlayer(ulong ownerClientId, out int slotIndex)
+    {
+        slotIndex = -1;
+
+        NetworkPlayerState localPlayer = FindLocalPlayer();
+        if (localPlayer == null)
+            return false;
+
+        List<NetworkPlayerState> allPlayers = GetSortedPlayers();
+        if (allPlayers.Count == 0)
+            return false;
+
+        if (localPlayer.OwnerClientId == ownerClientId)
+        {
+            slotIndex = centerSlotIndex;
+            return true;
+        }
+
+        List<NetworkPlayerState> others = new List<NetworkPlayerState>();
+        foreach (NetworkPlayerState player in allPlayers)
+        {
+            if (player != localPlayer)
+                others.Add(player);
+        }
+
+        List<int> otherSlotIndices = GetOtherSlotIndicesLeftToRight();
+
+        for (int i = 0; i < others.Count && i < otherSlotIndices.Count; i++)
+        {
+            if (others[i].OwnerClientId == ownerClientId)
+            {
+                slotIndex = otherSlotIndices[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void ClearViews()
     {
         for (int i = 0; i < activeViews.Count; i++)

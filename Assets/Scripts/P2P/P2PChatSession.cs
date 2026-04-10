@@ -170,7 +170,7 @@ public class P2PChatSession : NetworkBehaviour
             senderNickname = approvedNickname;
         }
 
-        Session.ServerAddNormalChat(senderNickname, message);
+        Session.ServerAddNormalChat(senderId, senderNickname, message);
 
         if (logDebugMessages)
             Debug.Log($"[Chat] {senderNickname}: {message}");

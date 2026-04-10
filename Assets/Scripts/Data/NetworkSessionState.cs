@@ -104,6 +104,7 @@ public class NetworkSessionState : NetworkBehaviour
 
         ChatHistory.Add(new P2PChatEntry(
             P2PChatEntryType.Narration,
+            ulong.MaxValue,
             string.Empty,
             message.Trim()
         ));
@@ -115,12 +116,13 @@ public class NetworkSessionState : NetworkBehaviour
 
         ChatHistory.Add(new P2PChatEntry(
             P2PChatEntryType.Divider,
+            ulong.MaxValue,
             string.Empty,
             string.Empty
         ));
     }
 
-    public void ServerAddNormalChat(string nickname, string message)
+    public void ServerAddNormalChat(ulong senderClientId, string nickname, string message)
     {
         if (!IsServer) return;
         if (string.IsNullOrWhiteSpace(nickname)) return;
@@ -128,6 +130,7 @@ public class NetworkSessionState : NetworkBehaviour
 
         ChatHistory.Add(new P2PChatEntry(
             P2PChatEntryType.Normal,
+            senderClientId,
             nickname.Trim(),
             message.Trim()
         ));
