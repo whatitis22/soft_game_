@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JobDefinition
   jobType: 1
   displayName: "\uC6A9\uC0AC"
-  portrait: {fileID: 0}
+  portrait: {fileID: 21300000, guid: 4795d7ce855304f429063010697d4630, type: 3}
+  lobbyStandingImage: {fileID: 21300000, guid: d4eb8810f6a11184c8b150c61758156c, type: 3}
   shortDescription: 1
   detailDescription: "\uC544\u3153\u3141\uB7EC\u3163\u3134\uC5B4\u3163\uB9AC\uBA3C\uC554\uB108"
