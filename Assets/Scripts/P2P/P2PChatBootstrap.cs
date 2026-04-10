@@ -198,7 +198,7 @@ public class P2PChatBootstrap : MonoBehaviour
         approvedNicknames[request.ClientNetworkId] = requestedNickname;
 
         response.Approved = true;
-        response.CreatePlayerObject = false;
+        response.CreatePlayerObject = true;
         response.Pending = false;
     }
 
