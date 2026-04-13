@@ -275,7 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1c1b7e7661f2f0449b33eeb738fbc8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PressAnyKeyToContinue
-  targetSceneName: LobbyScene
+  targetSceneName: Chat Test Scene
 --- !u!4 &205146283
 Transform:
   m_ObjectHideFlags: 0
