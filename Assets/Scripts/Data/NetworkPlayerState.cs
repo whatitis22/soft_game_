@@ -24,6 +24,9 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public NetworkVariable<int> CrystalGreen =
         new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    
+    public NetworkVariable<bool> IsReady =
+        new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("개인 비공개 상태")]
     // bit 0 = 카드1, bit 1 = 카드2 ... bit 5 = 카드6
@@ -68,6 +71,8 @@ public class NetworkPlayerState : NetworkBehaviour
 
         RemainingNumberCardsMask.Value = 0b0011_1111;
         InventoryItemIds.Clear();
+
+        IsReady.Value = false;
     }
 
 
@@ -136,6 +141,14 @@ public class NetworkPlayerState : NetworkBehaviour
         RemainingNumberCardsMask.Value = (byte)(current & ~mask);
     }
 
+    public void ServerSetReady(bool ready)
+    {
+        if (!IsServer)
+            return;
+
+        IsReady.Value = ready;
+    }
+
     [Rpc(SendTo.Server)]
     public void RequestUseNumberCardRpc(int cardValue, RpcParams rpcParams = default)
     {
@@ -167,5 +180,25 @@ public class NetworkPlayerState : NetworkBehaviour
             return;
 
         JobSelectionManager.Instance.ServerTryAssignJob(this, targetJob);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestSetReadyRpc(bool ready, RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (senderId != OwnerClientId)
+            return;
+
+        // 호스트는 준비 토글 대상이 아님
+        if (NetworkSessionState.Instance != null &&
+            senderId == NetworkSessionState.Instance.HostClientId.Value)
+        {
+            return;
+        }
+
+        IsReady.Value = ready;
     }
 }
