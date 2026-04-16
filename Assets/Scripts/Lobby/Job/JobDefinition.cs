@@ -12,9 +12,21 @@ public class JobDefinition : ScriptableObject
     [Header("·Îºñ ½ºÅÄµù")]
     public Sprite lobbyStandingImage;
 
+    [Header("Battle")]
+    [SerializeField] private GameObject battlePlayerStandingPrefab;
+    public GameObject BattlePlayerStandingPrefab => battlePlayerStandingPrefab;
+
     [TextArea(2, 4)]
     public string shortDescription;
 
     [TextArea(4, 10)]
     public string detailDescription;
+
+    public enum BattleStandingAction
+    {
+        Idle,
+        Attack,
+        Victory,
+        Defeat
+    }
 }
