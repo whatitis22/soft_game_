@@ -1,41 +1,196 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class BattlePlayerSpawnData
+public class BattleStandingPrefabEntry
 {
-    [Tooltip("0이면 p1, 1이면 p2, 2이면 p3 ...")]
-    public int playerIndex;
-
-    public JobDefinition jobDefinition;
+    public JobType jobType;
+    public GameObject prefab;
 }
 
 public class BattlePlayerSlots : MonoBehaviour
 {
-    [Header("playerIndex와 1:1 대응")]
-    [Tooltip("0번 슬롯 = p1 위치, 1번 슬롯 = p2 위치 ...")]
+    [Header("0번 = p1 위치, 1번 = p2 위치 ...")]
     [SerializeField] private Transform[] playerSlots;
+
+    [Header("직업별 전투 스탠딩 프리펩")]
+    [SerializeField] private BattleStandingPrefabEntry[] battleStandingPrefabs;
+
+    [Header("자동 소환")]
+    [SerializeField] private bool spawnOnStart = true;
+    [SerializeField] private float waitTimeout = 3f;
 
     private readonly Dictionary<int, BattlePlayerStanding> spawnedStandings
         = new Dictionary<int, BattlePlayerStanding>();
 
     public IReadOnlyDictionary<int, BattlePlayerStanding> SpawnedStandings => spawnedStandings;
 
-    public void Build(IReadOnlyList<BattlePlayerSpawnData> players)
+    private IEnumerator Start()
+    {
+        if (!spawnOnStart)
+            yield break;
+
+        yield return SpawnWhenPlayersReady();
+    }
+
+    private IEnumerator SpawnWhenPlayersReady()
+    {
+        float elapsed = 0f;
+
+        while (elapsed < waitTimeout)
+        {
+            NetworkPlayerState[] players =
+                FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
+
+            if (HasSpawnablePlayers(players))
+            {
+                SpawnFromPlayers(players);
+                yield break;
+            }
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        Debug.LogWarning("BattlePlayerSlots: 씬 안에서 유효한 NetworkPlayerState를 찾지 못했습니다.");
+    }
+
+    private bool HasSpawnablePlayers(NetworkPlayerState[] players)
+    {
+        if (players == null || players.Length == 0)
+            return false;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (IsSpawnable(players[i]))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsSpawnable(NetworkPlayerState player)
+    {
+        if (player == null)
+            return false;
+
+        if (player.PlayerIndex.Value < 0)
+            return false;
+
+        if (player.Job.Value == JobType.None)
+            return false;
+
+        return true;
+    }
+
+    public void RespawnNow()
+    {
+        NetworkPlayerState[] players =
+            FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
+
+        SpawnFromPlayers(players);
+    }
+
+    public void SpawnFromPlayers(NetworkPlayerState[] players)
     {
         ClearAll();
 
-        if (players == null || players.Count == 0)
+        if (players == null || players.Length == 0)
         {
             Debug.LogWarning("BattlePlayerSlots: 소환할 플레이어가 없습니다.");
             return;
         }
 
-        for (int i = 0; i < players.Count; i++)
+        List<NetworkPlayerState> validPlayers = new List<NetworkPlayerState>();
+
+        for (int i = 0; i < players.Length; i++)
         {
-            Spawn(players[i]);
+            if (!IsSpawnable(players[i]))
+                continue;
+
+            validPlayers.Add(players[i]);
         }
+
+        if (validPlayers.Count == 0)
+        {
+            Debug.LogWarning("BattlePlayerSlots: 아직 PlayerIndex / Job 데이터가 준비된 플레이어가 없습니다.");
+            return;
+        }
+
+        validPlayers.Sort(CompareByPlayerIndex);
+
+        for (int i = 0; i < validPlayers.Count; i++)
+        {
+            SpawnOne(validPlayers[i]);
+        }
+    }
+
+    private int CompareByPlayerIndex(NetworkPlayerState a, NetworkPlayerState b)
+    {
+        return a.PlayerIndex.Value.CompareTo(b.PlayerIndex.Value);
+    }
+
+    private void SpawnOne(NetworkPlayerState player)
+    {
+        if (player == null)
+            return;
+
+        int playerIndex = player.PlayerIndex.Value;
+        JobType jobType = player.Job.Value;
+
+        if (playerIndex < 0 || playerIndex >= playerSlots.Length)
+        {
+            Debug.LogWarning($"BattlePlayerSlots: playerIndex {playerIndex} 에 해당하는 슬롯이 없습니다.");
+            return;
+        }
+
+        if (!TryGetStandingPrefab(jobType, out GameObject prefab) || prefab == null)
+        {
+            Debug.LogWarning($"BattlePlayerSlots: 직업 '{jobType}' 에 대응되는 전투 스탠딩 프리펩이 없습니다.");
+            return;
+        }
+
+        if (spawnedStandings.ContainsKey(playerIndex))
+        {
+            Debug.LogWarning($"BattlePlayerSlots: p{playerIndex + 1} 이 중복 감지되었습니다. 뒤의 항목은 무시합니다.");
+            return;
+        }
+
+        Transform slot = playerSlots[playerIndex];
+
+        GameObject instance = Instantiate(prefab, slot.position, slot.rotation, slot);
+        instance.name = $"BattleStanding_p{playerIndex + 1}_{jobType}";
+
+        BattlePlayerStanding standing = instance.GetComponent<BattlePlayerStanding>();
+        if (standing == null)
+        {
+            Debug.LogWarning($"{instance.name}: BattlePlayerStanding 컴포넌트가 없어 자동 추가했습니다.");
+            standing = instance.AddComponent<BattlePlayerStanding>();
+        }
+
+        standing.Initialize(playerIndex);
+        spawnedStandings[playerIndex] = standing;
+    }
+
+    private bool TryGetStandingPrefab(JobType jobType, out GameObject prefab)
+    {
+        if (battleStandingPrefabs != null)
+        {
+            for (int i = 0; i < battleStandingPrefabs.Length; i++)
+            {
+                BattleStandingPrefabEntry entry = battleStandingPrefabs[i];
+                if (entry != null && entry.jobType == jobType)
+                {
+                    prefab = entry.prefab;
+                    return prefab != null;
+                }
+            }
+        }
+
+        prefab = null;
+        return false;
     }
 
     public void ClearAll()
@@ -47,47 +202,6 @@ public class BattlePlayerSlots : MonoBehaviour
         }
 
         spawnedStandings.Clear();
-    }
-
-    private void Spawn(BattlePlayerSpawnData data)
-    {
-        if (data == null)
-            return;
-
-        int playerIndex = data.playerIndex;
-
-        if (playerIndex < 0 || playerIndex >= playerSlots.Length)
-        {
-            Debug.LogWarning($"BattlePlayerSlots: playerIndex {playerIndex} 에 대응되는 슬롯이 없습니다.");
-            return;
-        }
-
-        if (data.jobDefinition == null)
-        {
-            Debug.LogWarning($"BattlePlayerSlots: p{playerIndex + 1} 의 JobDefinition이 비어 있습니다.");
-            return;
-        }
-
-        GameObject prefab = data.jobDefinition.BattlePlayerStandingPrefab;
-        if (prefab == null)
-        {
-            Debug.LogWarning($"BattlePlayerSlots: {data.jobDefinition.name} 의 BattlePlayerStandingPrefab이 비어 있습니다.");
-            return;
-        }
-
-        Transform slot = playerSlots[playerIndex];
-        GameObject instance = Instantiate(prefab, slot.position, slot.rotation, slot);
-        instance.name = $"BattleStanding_{BattlePlayerStandingRegistry.ToKey(playerIndex)}_{data.jobDefinition.name}";
-
-        BattlePlayerStanding standing = instance.GetComponent<BattlePlayerStanding>();
-        if (standing == null)
-        {
-            Debug.LogWarning($"{instance.name}: BattlePlayerStanding 컴포넌트가 없어 자동으로 추가했습니다. Animator 트리거명이 기본값과 같은지 확인하세요.");
-            standing = instance.AddComponent<BattlePlayerStanding>();
-        }
-
-        standing.Initialize(playerIndex);
-        spawnedStandings[playerIndex] = standing;
     }
 
     public bool TryGetStanding(int playerIndex, out BattlePlayerStanding standing)
