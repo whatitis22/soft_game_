@@ -28,6 +28,9 @@ public class NetworkPlayerState : NetworkBehaviour
     public NetworkVariable<bool> IsReady =
         new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<int> SubmittedCard =
+        new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     [Header("개인 비공개 상태")]
     // bit 0 = 카드1, bit 1 = 카드2 ... bit 5 = 카드6
     public NetworkVariable<byte> RemainingNumberCardsMask =
@@ -73,6 +76,8 @@ public class NetworkPlayerState : NetworkBehaviour
         InventoryItemIds.Clear();
 
         IsReady.Value = false;
+
+        SubmittedCard.Value = -1;
     }
 
 
@@ -149,6 +154,14 @@ public class NetworkPlayerState : NetworkBehaviour
         IsReady.Value = ready;
     }
 
+    public void ServerClearSubmittedCard()
+    {
+        if (!IsServer)
+            return;
+
+        SubmittedCard.Value = -1;
+    }
+
     [Rpc(SendTo.Server)]
     public void RequestUseNumberCardRpc(int cardValue, RpcParams rpcParams = default)
     {
@@ -159,11 +172,22 @@ public class NetworkPlayerState : NetworkBehaviour
         if (senderId != OwnerClientId)
             return;
 
+        if (cardValue < 1 || cardValue > 6)
+            return;
+
+        // 이미 이번 라운드에 제출했으면 무시
+        if (SubmittedCard.Value >= 1 && SubmittedCard.Value <= 6)
+            return;
+
+        // 아직 남아 있는 카드인지 확인
         if (!HasNumberCard(cardValue))
             return;
 
+        // 서버 확정
+        SubmittedCard.Value = cardValue;
         ServerConsumeNumberCard(cardValue);
-        Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} 사용");
+
+        Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} 제출");
     }
 
     [Rpc(SendTo.Server)]

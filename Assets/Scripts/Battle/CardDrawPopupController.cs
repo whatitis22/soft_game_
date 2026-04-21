@@ -209,7 +209,19 @@ public class CardDrawPopupController : MonoBehaviour
 
     private void SubmitCard(NumberCardDragUI card)
     {
+        if (card == null)
+            return;
+
+        if (card.CardValue < 1 || card.CardValue > 6)
+        {
+            Debug.LogWarning($"CardDrawPopupController: {card.name} 의 CardValue 가 잘못되었습니다. ({card.CardValue})");
+            card.BeginReturnToStart();
+            return;
+        }
+
         temporarySelectedNumber = card.CardValue;
+        Debug.Log($"카드 제출 감지: {card.name} / 값 = {temporarySelectedNumber}");
+
         onCardSubmitted.Invoke(temporarySelectedNumber);
 
         if (closeOnSubmit)

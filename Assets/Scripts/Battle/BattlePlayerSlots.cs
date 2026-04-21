@@ -26,6 +26,9 @@ public class BattlePlayerSlots : MonoBehaviour
     private readonly Dictionary<int, BattlePlayerStanding> spawnedStandings
         = new Dictionary<int, BattlePlayerStanding>();
 
+    private readonly Dictionary<NetworkPlayerState, NetworkVariable<int>.OnValueChangedDelegate> submittedCardHandlers
+        = new Dictionary<NetworkPlayerState, NetworkVariable<int>.OnValueChangedDelegate>();
+
     public IReadOnlyDictionary<int, BattlePlayerStanding> SpawnedStandings => spawnedStandings;
 
     private IEnumerator Start()
@@ -96,6 +99,7 @@ public class BattlePlayerSlots : MonoBehaviour
 
     public void SpawnFromPlayers(NetworkPlayerState[] players)
     {
+        UnsubscribeAllPlayerStateEvents();
         ClearAll();
 
         if (players == null || players.Length == 0)
@@ -125,6 +129,8 @@ public class BattlePlayerSlots : MonoBehaviour
         for (int i = 0; i < validPlayers.Count; i++)
         {
             SpawnOne(validPlayers[i]);
+            SubscribeSubmittedCard(validPlayers[i]);
+            ApplySubmittedCardVisual(validPlayers[i]);
         }
     }
 
@@ -220,5 +226,61 @@ public class BattlePlayerSlots : MonoBehaviour
     public bool TryGetStanding(int playerIndex, out BattlePlayerStanding standing)
     {
         return spawnedStandings.TryGetValue(playerIndex, out standing);
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeAllPlayerStateEvents();
+    }
+
+    private void SubscribeSubmittedCard(NetworkPlayerState player)
+    {
+        if (player == null)
+            return;
+
+        if (submittedCardHandlers.ContainsKey(player))
+            return;
+
+        NetworkVariable<int>.OnValueChangedDelegate handler = (previousValue, newValue) =>
+        {
+            ApplySubmittedCardVisual(player);
+        };
+
+        player.SubmittedCard.OnValueChanged += handler;
+        submittedCardHandlers[player] = handler;
+    }
+
+    private void UnsubscribeAllPlayerStateEvents()
+    {
+        foreach (var pair in submittedCardHandlers)
+        {
+            if (pair.Key == null)
+                continue;
+
+            pair.Key.SubmittedCard.OnValueChanged -= pair.Value;
+        }
+
+        submittedCardHandlers.Clear();
+    }
+
+    private void ApplySubmittedCardVisual(NetworkPlayerState player)
+    {
+        if (player == null)
+            return;
+
+        int playerIndex = player.PlayerIndex.Value;
+        int submittedCard = player.SubmittedCard.Value;
+
+        if (!spawnedStandings.TryGetValue(playerIndex, out BattlePlayerStanding standing) || standing == null)
+            return;
+
+        if (submittedCard >= 1 && submittedCard <= 6)
+        {
+            standing.SetSubmittedCard(submittedCard);
+        }
+        else
+        {
+            standing.ClearSubmittedCard();
+        }
     }
 }

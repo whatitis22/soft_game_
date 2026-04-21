@@ -28,8 +28,15 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
     public int CardValue => cardValue;
 
+    private void OnValidate()
+    {
+        cardValue = Mathf.Clamp(cardValue, 1, 6);
+    }
+
     private void Awake()
     {
+        cardValue = Mathf.Clamp(cardValue, 1, 6);
+
         rectTransform = (RectTransform)transform;
         canvasGroup = GetComponent<CanvasGroup>();
 
@@ -119,11 +126,17 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         if (dragParentRect == null)
             return;
 
+        if (cardValue < 1 || cardValue > 6)
+        {
+            Debug.LogWarning($"{name}: cardValue 가 잘못되었습니다. 현재 값 = {cardValue}");
+            return;
+        }
+
+        Debug.Log($"{name}: 드래그 시작 / cardValue = {cardValue}");
+
         isDragging = true;
         isReturning = false;
-
-        if (canvasGroup != null)
-            canvasGroup.blocksRaycasts = false;
+        ApplyInteractableVisual();
 
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             dragParentRect,
