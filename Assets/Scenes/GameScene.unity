@@ -773,7 +773,7 @@ MonoBehaviour:
   - {fileID: 1370688259}
   - {fileID: 1980929786}
   - {fileID: 20616254}
-  openPopupButton: {fileID: 0}
+  openPopupButton: {fileID: 588542310}
   closeOnSubmit: 1
   resetCardPositionsOnOpen: 1
   resetCardPositionsOnClose: 1
