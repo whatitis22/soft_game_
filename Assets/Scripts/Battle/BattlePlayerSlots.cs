@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 [Serializable]
@@ -170,7 +171,19 @@ public class BattlePlayerSlots : MonoBehaviour
             standing = instance.AddComponent<BattlePlayerStanding>();
         }
 
-        standing.Initialize(playerIndex);
+        ulong localClientId = ulong.MaxValue;
+        ulong serverClientId = Unity.Netcode.NetworkManager.ServerClientId;
+
+        if (Unity.Netcode.NetworkManager.Singleton != null)
+        {
+            localClientId = Unity.Netcode.NetworkManager.Singleton.LocalClientId;
+        }
+
+        bool isLocalPlayer = player.OwnerClientId == localClientId;
+        bool isHostPlayer = player.OwnerClientId == serverClientId;
+        string nickname = player.DisplayNickname.Value.ToString();
+
+        standing.Initialize(playerIndex, nickname, isHostPlayer, isLocalPlayer);
         spawnedStandings[playerIndex] = standing;
     }
 

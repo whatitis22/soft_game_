@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 [Serializable]
 public class CardSubmittedEvent : UnityEvent<int> { }
@@ -12,6 +13,9 @@ public class CardDrawPopupController : MonoBehaviour
     [SerializeField] private RectTransform submitLineRect;
     [SerializeField] private Canvas rootCanvas;
     [SerializeField] private NumberCardDragUI[] cards;
+
+    [Header("Open Button")]
+    [SerializeField] private Selectable openPopupButton;
 
     [Header("Behavior")]
     [SerializeField] private bool closeOnSubmit = true;
@@ -68,7 +72,7 @@ public class CardDrawPopupController : MonoBehaviour
             return;
 
         if (IsRightClickPressedThisFrame())
-            ClosePopup();
+            CancelAndClosePopup();
     }
 
     public void OpenPopup()
@@ -80,6 +84,7 @@ public class CardDrawPopupController : MonoBehaviour
         }
 
         popupRoot.SetActive(true);
+        SetOpenButtonInteractable(false);
 
         AutoCollectCardsIfNeeded();
         BindCards();
@@ -90,13 +95,32 @@ public class CardDrawPopupController : MonoBehaviour
         RefreshCardInteractableState();
     }
 
-    public void ClosePopup()
+    public void CancelAndClosePopup()
+    {
+        ClosePopup(reactivateOpenButton: true);
+    }
+
+    public void ClosePopupAfterSubmit()
+    {
+        ClosePopup(reactivateOpenButton: false);
+    }
+
+    public void ClosePopup(bool reactivateOpenButton)
     {
         if (resetCardPositionsOnClose)
             ResetAllCardsImmediate();
 
         if (popupRoot != null)
             popupRoot.SetActive(false);
+
+        if (reactivateOpenButton)
+            SetOpenButtonInteractable(true);
+    }
+
+    public void SetOpenButtonInteractable(bool interactable)
+    {
+        if (openPopupButton != null)
+            openPopupButton.interactable = interactable;
     }
 
     public void ClearTemporarySelection()
@@ -190,7 +214,7 @@ public class CardDrawPopupController : MonoBehaviour
 
         if (closeOnSubmit)
         {
-            ClosePopup();
+            ClosePopupAfterSubmit();
         }
         else
         {
