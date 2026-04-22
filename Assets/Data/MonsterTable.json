@@ -1,0 +1,125 @@
+﻿[
+  {
+    "id": "M000",
+    "monster_name": "브리짓",
+    "danger": 5,
+    "spawn_stage": "guiltygear",
+    "HP": 99,
+    "reward_1st": "r1 g1 b1",
+    "reward_2nd": "r1 g1 b1",
+    "reward_3rd": "r1 g1 b1",
+    "prefab_name": "monster_bridget_prefab",
+    "preview_name": "preview_bridget",
+    "dec": "예시용 몬스터. =============\n========================줄바꿈 \\n으로 들어감."
+  },
+  {
+    "id": "M001",
+    "monster_name": "로크레빗",
+    "danger": 1,
+    "spawn_stage": "Grassland",
+    "HP": 7,
+    "reward_1st": "g2",
+    "reward_2nd": "b1",
+    "reward_3rd": "0",
+    "prefab_name": "monster_rock_rabbit_prefab",
+    "preview_name": "preview_rock_rabbit",
+    "dec": "머리에 뿔이 나있는 토끼다."
+  },
+  {
+    "id": "M002",
+    "monster_name": "슬라임",
+    "danger": 1,
+    "spawn_stage": "Grassland",
+    "HP": 4,
+    "reward_1st": "r1",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "monster_slime_prefab",
+    "preview_name": "preview_slime",
+    "dec": "슬라임. 말랑말랑하다."
+  },
+  {
+    "id": "M003"
+  },
+  {
+    "id": "M004"
+  },
+  {
+    "id": "M005"
+  },
+  {
+    "id": "M006"
+  },
+  {
+    "id": "M007"
+  },
+  {
+    "id": "M008"
+  },
+  {
+    "id": "M009"
+  },
+  {
+    "id": "M010"
+  },
+  {
+    "id": "M011"
+  },
+  {
+    "id": "M012"
+  },
+  {
+    "id": "M013"
+  },
+  {
+    "id": "M014"
+  },
+  {
+    "id": "M015"
+  },
+  {
+    "id": "M016"
+  },
+  {
+    "id": "M017"
+  },
+  {
+    "id": "M018"
+  },
+  {
+    "id": "M019"
+  },
+  {
+    "id": "M020"
+  },
+  {
+    "id": "M021"
+  },
+  {
+    "id": "M022"
+  },
+  {
+    "id": "M023"
+  },
+  {
+    "id": "M024"
+  },
+  {
+    "id": "M025"
+  },
+  {
+    "id": "M026"
+  },
+  {
+    "id": "M027"
+  },
+  {
+    "id": "M028"
+  },
+  {
+    "id": "M029"
+  },
+  {
+    "id": "M030"
+  }
+]
