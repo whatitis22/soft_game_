@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,6 +26,21 @@ public class JobSelectionPopupUI : MonoBehaviour
 
     private JobDefinition currentPreview;
     private NetworkPlayerState localPlayerState;
+    private readonly Dictionary<NetworkPlayerState, NetworkVariable<JobType>.OnValueChangedDelegate> jobChangeHandlers
+        = new Dictionary<NetworkPlayerState, NetworkVariable<JobType>.OnValueChangedDelegate>();
+
+    private bool IsPopupOpen => popupRoot != null && popupRoot.activeSelf;
+
+    private void OnEnable()
+    {
+        NetworkPlayerRegistry.PlayersChanged += OnRegisteredPlayersChanged;
+    }
+
+    private void OnDisable()
+    {
+        NetworkPlayerRegistry.PlayersChanged -= OnRegisteredPlayersChanged;
+        UnsubscribeAllJobChanges();
+    }
 
     private void Start()
     {
@@ -45,6 +62,7 @@ public class JobSelectionPopupUI : MonoBehaviour
     public void OpenPopup()
     {
         popupRoot.SetActive(true);
+        RefreshJobChangeSubscriptions();
         ResolveLocalPlayerState();
         BuildList();
 
@@ -57,6 +75,78 @@ public class JobSelectionPopupUI : MonoBehaviour
     public void ClosePopup()
     {
         popupRoot.SetActive(false);
+    }
+
+    private void OnRegisteredPlayersChanged()
+    {
+        RefreshJobChangeSubscriptions();
+
+        if (IsPopupOpen)
+            RefreshFromNetworkState();
+    }
+
+    private void RefreshFromNetworkState()
+    {
+        ResolveLocalPlayerState();
+        BuildList();
+        RefreshSelectButtonState();
+    }
+
+    private void RefreshJobChangeSubscriptions()
+    {
+        List<NetworkPlayerState> players = NetworkPlayerRegistry.GetSpawnedPlayers();
+        List<NetworkPlayerState> subscribedPlayers = new List<NetworkPlayerState>(jobChangeHandlers.Keys);
+
+        for (int i = 0; i < subscribedPlayers.Count; i++)
+        {
+            NetworkPlayerState player = subscribedPlayers[i];
+            if (player == null || !players.Contains(player))
+                UnsubscribeJobChange(player);
+        }
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            NetworkPlayerState player = players[i];
+            if (player == null || jobChangeHandlers.ContainsKey(player))
+                continue;
+
+            NetworkVariable<JobType>.OnValueChangedDelegate handler = (previousValue, newValue) =>
+            {
+                if (IsPopupOpen)
+                    RefreshFromNetworkState();
+            };
+
+            player.Job.OnValueChanged += handler;
+            jobChangeHandlers[player] = handler;
+        }
+    }
+
+    private void UnsubscribeJobChange(NetworkPlayerState player)
+    {
+        if (player == null)
+        {
+            if (!ReferenceEquals(player, null))
+                jobChangeHandlers.Remove(player);
+
+            return;
+        }
+
+        if (!jobChangeHandlers.TryGetValue(player, out NetworkVariable<JobType>.OnValueChangedDelegate handler))
+            return;
+
+        player.Job.OnValueChanged -= handler;
+        jobChangeHandlers.Remove(player);
+    }
+
+    private void UnsubscribeAllJobChanges()
+    {
+        foreach (KeyValuePair<NetworkPlayerState, NetworkVariable<JobType>.OnValueChangedDelegate> pair in jobChangeHandlers)
+        {
+            if (pair.Key != null)
+                pair.Key.Job.OnValueChanged -= pair.Value;
+        }
+
+        jobChangeHandlers.Clear();
     }
 
     private void ResolveLocalPlayerState()
@@ -146,8 +236,5 @@ public class JobSelectionPopupUI : MonoBehaviour
             return;
 
         localPlayerState.RequestChangeJobRpc(currentPreview.jobType);
-
-        BuildList();
-        RefreshSelectButtonState();
     }
 }

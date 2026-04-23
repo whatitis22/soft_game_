@@ -179,18 +179,30 @@ public class NetworkPlayerState : NetworkBehaviour
 
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "자신의 카드만 제출할 수 있습니다.");
             return;
+        }
 
         if (cardValue < 1 || cardValue > 6)
+        {
+            SendCommandFeedback(senderId, "유효하지 않은 카드입니다.");
             return;
+        }
 
         // 이미 이번 라운드에 제출했으면 무시
         if (SubmittedCard.Value >= 1 && SubmittedCard.Value <= 6)
+        {
+            SendCommandFeedback(senderId, "이미 이번 라운드에 카드를 제출했습니다.");
             return;
+        }
 
         // 아직 남아 있는 카드인지 확인
         if (!HasNumberCard(cardValue))
+        {
+            SendCommandFeedback(senderId, $"카드 {cardValue}는 이미 사용했거나 보유하지 않았습니다.");
             return;
+        }
 
         // 서버 확정
         SubmittedCard.Value = cardValue;
@@ -207,12 +219,19 @@ public class NetworkPlayerState : NetworkBehaviour
 
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "자신의 직업만 변경할 수 있습니다.");
             return;
+        }
 
         if (JobSelectionManager.Instance == null)
+        {
+            SendCommandFeedback(senderId, "직업 선택 시스템이 아직 준비되지 않았습니다.");
             return;
+        }
 
-        JobSelectionManager.Instance.ServerTryAssignJob(this, targetJob);
+        if (!JobSelectionManager.Instance.ServerTryAssignJob(this, targetJob, out string failureReason))
+            SendCommandFeedback(senderId, failureReason);
     }
 
     [Rpc(SendTo.Server)]
@@ -223,15 +242,55 @@ public class NetworkPlayerState : NetworkBehaviour
 
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "자신의 준비 상태만 변경할 수 있습니다.");
             return;
+        }
 
         // 호스트는 준비 토글 대상이 아님
         if (NetworkSessionState.Instance != null &&
             senderId == NetworkSessionState.Instance.HostClientId.Value)
         {
+            SendCommandFeedback(senderId, "호스트는 준비 토글 대상이 아닙니다.");
             return;
         }
 
         IsReady.Value = ready;
+    }
+
+    [ClientRpc]
+    private void ShowCommandFeedbackClientRpc(string message, ClientRpcParams clientRpcParams = default)
+    {
+        ShowLocalCommandFeedback(message);
+    }
+
+    private void SendCommandFeedback(ulong clientId, string message)
+    {
+        if (string.IsNullOrWhiteSpace(message) || NetworkManager == null)
+            return;
+
+        if (clientId == NetworkManager.ServerClientId)
+        {
+            ShowLocalCommandFeedback(message);
+            return;
+        }
+
+        ClientRpcParams rpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
+
+        ShowCommandFeedbackClientRpc(message, rpcParams);
+    }
+
+    private void ShowLocalCommandFeedback(string message)
+    {
+        if (P2PChatUI.Instance != null)
+            P2PChatUI.Instance.SetStatus(message);
+        else
+            Debug.LogWarning(message);
     }
 }

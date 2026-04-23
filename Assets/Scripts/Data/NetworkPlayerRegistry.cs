@@ -5,6 +5,8 @@ public static class NetworkPlayerRegistry
 {
     private static readonly List<NetworkPlayerState> players = new List<NetworkPlayerState>();
 
+    public static event System.Action PlayersChanged;
+
     public static void Register(NetworkPlayerState player)
     {
         if (player == null)
@@ -12,8 +14,11 @@ public static class NetworkPlayerRegistry
 
         Compact();
 
-        if (!players.Contains(player))
-            players.Add(player);
+        if (players.Contains(player))
+            return;
+
+        players.Add(player);
+        PlayersChanged?.Invoke();
     }
 
     public static void Unregister(NetworkPlayerState player)
@@ -21,7 +26,8 @@ public static class NetworkPlayerRegistry
         if (player == null)
             return;
 
-        players.Remove(player);
+        if (players.Remove(player))
+            PlayersChanged?.Invoke();
     }
 
     public static List<NetworkPlayerState> GetSpawnedPlayers()
@@ -101,7 +107,11 @@ public static class NetworkPlayerRegistry
 
     public static void Clear()
     {
+        if (players.Count == 0)
+            return;
+
         players.Clear();
+        PlayersChanged?.Invoke();
     }
 
     private static void Compact()

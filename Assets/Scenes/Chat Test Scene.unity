@@ -4416,6 +4416,11 @@ MonoBehaviour:
   normalBlockPrefab: {fileID: 1384083720603121251, guid: 9e6d9a949c953dd4a8470ac7b0350962, type: 3}
   narrationBlockPrefab: {fileID: 6924150823043562814, guid: b5d236819ddc79d43aac2629d6c7a87a, type: 3}
   dividerBlockPrefab: {fileID: 1475203225038609517, guid: 82789b1a0771e5544b7e888001680e14, type: 3}
+  historyPageSize: 30
+  loadOlderOnScrollTop: 1
+  loadOlderScrollThreshold: 0.98
+  loadOlderHistoryButton: {fileID: 0}
+  historyRangeText: {fileID: 0}
   lobbyThingsRoot: {fileID: 220114207}
   jobSelectButton: {fileID: 353326187}
   jobSelectionPopupUI: {fileID: 1160862176}
@@ -6089,6 +6094,7 @@ MonoBehaviour:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
+  maxChatHistoryEntries: 300
   makeDontDestroyOnLoad: 1
 --- !u!1 &1486294549
 GameObject:
@@ -8169,7 +8175,7 @@ SceneRoots:
   - {fileID: 917501636}
   - {fileID: 1160862175}
   - {fileID: 2124740909}
-  - {fileID: 1729669967}
   - {fileID: 1253387231}
   - {fileID: 175406207}
   - {fileID: 1460476150}
+  - {fileID: 1729669967}

@@ -68,19 +68,37 @@ public class JobSelectionManager : MonoBehaviour
 
     public bool ServerTryAssignJob(NetworkPlayerState player, JobType targetJob)
     {
+        return ServerTryAssignJob(player, targetJob, out _);
+    }
+
+    public bool ServerTryAssignJob(NetworkPlayerState player, JobType targetJob, out string failureReason)
+    {
         if (player == null || !player.IsServer)
+        {
+            failureReason = "직업 변경은 호스트가 확정해야 합니다.";
             return false;
+        }
 
         if (targetJob == JobType.None)
+        {
+            failureReason = "선택할 수 없는 직업입니다.";
             return false;
+        }
 
         if (player.Job.Value == targetJob)
+        {
+            failureReason = string.Empty;
             return true;
+        }
 
         if (IsJobTaken(targetJob, player.OwnerClientId))
+        {
+            failureReason = $"{GetJobDisplayName(targetJob)} 직업은 이미 다른 플레이어가 선택했습니다.";
             return false;
+        }
 
         player.ServerSetJob(targetJob);
+        failureReason = string.Empty;
         return true;
     }
 
