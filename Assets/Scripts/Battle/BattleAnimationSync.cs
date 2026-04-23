@@ -12,7 +12,7 @@ public class BattleAnimationSync : NetworkBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("BattleAnimationSync Áßº¹ ÀÎ½ºÅÏ½º°¡ °¨ÁöµÇ¾ú½À´Ï´Ù.");
+            Debug.LogWarning("BattleAnimationSync ì¤‘ë³µ ì¸ìŠ¤í„´ìŠ¤ê°€ ê°ì§€ë˜ì—ˆìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -32,7 +32,7 @@ public class BattleAnimationSync : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(triggerName))
             return;
 
-        // ³×Æ®¿öÅ© ¾øÀÌ ´ÜÀÏ ½ÇÇà ÁßÀÏ ¶§µµ Å×½ºÆ® °¡´ÉÇÏµµ·Ï ·ÎÄÃ Æú¹é
+        // ë„¤íŠ¸ì›Œí¬ ì—†ì´ ë‹¨ì¼ ì‹¤í–‰ ì¤‘ì¼ ë•Œë„ í…ŒìŠ¤íŠ¸ ê°€ëŠ¥í•˜ë„ë¡ ë¡œì»¬ í´ë°±
         if (!IsSpawned)
         {
             PlayLocal(playerIndex, triggerName);
@@ -41,7 +41,7 @@ public class BattleAnimationSync : NetworkBehaviour
 
         FixedString64Bytes trigger = new FixedString64Bytes(triggerName);
 
-        if (IsServer)
+        if (NetworkCommandAuthority.CanLocalServerRunCommand(this))
         {
             PlayAnimationOnAllRpc(playerIndex, trigger);
         }
@@ -57,7 +57,23 @@ public class BattleAnimationSync : NetworkBehaviour
         if (!IsServer)
             return;
 
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (!NetworkCommandAuthority.CanRunHostOwnedCommand(senderId))
+        {
+            WarnAnimationCommandDenied(senderId);
+            return;
+        }
+
         PlayAnimationOnAllRpc(playerIndex, triggerName);
+    }
+
+    [ClientRpc]
+    private void ShowAnimationCommandDeniedClientRpc(string message, ClientRpcParams clientRpcParams = default)
+    {
+        if (P2PChatUI.Instance != null)
+            P2PChatUI.Instance.SetStatus(message);
+        else
+            Debug.LogWarning(message);
     }
 
     [Rpc(SendTo.ClientsAndHost)]
@@ -70,10 +86,35 @@ public class BattleAnimationSync : NetworkBehaviour
     {
         if (!BattlePlayerStandingRegistry.TryGet(playerIndex, out BattlePlayerStanding standing) || standing == null)
         {
-            Debug.LogWarning($"BattleAnimationSync: p{playerIndex + 1} ½ºÅÄµùÀ» Ã£Áö ¸øÇß½À´Ï´Ù.");
+            Debug.LogWarning($"BattleAnimationSync: p{playerIndex + 1} ìŠ¤íƒ ë”©ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
             return;
         }
 
         standing.PlayCustom(triggerName);
+    }
+
+    private void WarnAnimationCommandDenied(ulong clientId)
+    {
+        string message = "ì „íˆ¬ ì• ë‹ˆë©”ì´ì…˜ ëª…ë ¹ì€ í˜¸ìŠ¤íŠ¸ë§Œ ì‚¬ìš©í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.";
+
+        if (NetworkManager == null)
+            return;
+
+        if (clientId == NetworkManager.ServerClientId)
+        {
+            Debug.LogWarning(message);
+            return;
+        }
+
+        ClientRpcParams rpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
+
+        ShowAnimationCommandDeniedClientRpc(message, rpcParams);
+        Debug.LogWarning($"[AnimationCommandDenied] clientId={clientId}");
     }
 }

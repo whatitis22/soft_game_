@@ -87,7 +87,7 @@ public class P2PChatSession : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(trimmed) || Session == null)
             return;
 
-        if (IsServer)
+        if (NetworkCommandAuthority.CanLocalServerRunCommand(this))
             Session.ServerAddNarration(trimmed);
         else
             AddNarrationRpc(trimmed);
@@ -98,7 +98,7 @@ public class P2PChatSession : NetworkBehaviour
         if (Session == null)
             return;
 
-        if (IsServer)
+        if (NetworkCommandAuthority.CanLocalServerRunCommand(this))
             Session.ServerAddDivider();
         else
             AddDividerRpc();
@@ -112,16 +112,26 @@ public class P2PChatSession : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server)]
-    private void AddNarrationRpc(string narrationText)
+    private void AddNarrationRpc(string narrationText, RpcParams rpcParams = default)
     {
         if (Session == null) return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (!TryAuthorizeHostOwnedCommand(senderId, "나레이션"))
+            return;
+
         Session.ServerAddNarration(narrationText);
     }
 
     [Rpc(SendTo.Server)]
-    private void AddDividerRpc()
+    private void AddDividerRpc(RpcParams rpcParams = default)
     {
         if (Session == null) return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (!TryAuthorizeHostOwnedCommand(senderId, "구분선"))
+            return;
+
         Session.ServerAddDivider();
     }
 
@@ -185,7 +195,8 @@ public class P2PChatSession : NetworkBehaviour
 
         if (clientId == NetworkManager.ServerClientId)
         {
-            P2PChatUI.Instance.SetStatus(message);
+            if (P2PChatUI.Instance != null)
+                P2PChatUI.Instance.SetStatus(message);
             return;
         }
 
@@ -198,6 +209,20 @@ public class P2PChatSession : NetworkBehaviour
         };
 
         ShowStatusClientRpc(message, rpcParams);
+    }
+
+    private bool TryAuthorizeHostOwnedCommand(ulong senderId, string commandName)
+    {
+        if (NetworkCommandAuthority.CanRunHostOwnedCommand(senderId))
+            return true;
+
+        string message = $"{commandName} 명령은 호스트만 사용할 수 있습니다.";
+        WarnOneClient(senderId, message);
+
+        if (logDebugMessages)
+            Debug.LogWarning($"[ChatCommandDenied] clientId={senderId}, command={commandName}");
+
+        return false;
     }
 
     private Queue<float> GetOrCreateTimeQueue(ulong clientId)
