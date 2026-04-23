@@ -8,7 +8,7 @@ public class NetworkSessionState : NetworkBehaviour
 {
     public static NetworkSessionState Instance { get; private set; }
 
-    [Header("°ø¿ë »óÅÂ")]
+    [Header("ê³µìš© ìƒíƒœ")]
     public NetworkVariable<int> LeaderPlayerIndex =
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -44,8 +44,13 @@ public class NetworkSessionState : NetworkBehaviour
 
     public NetworkList<P2PChatEntry> ChatHistory;
 
-    [Header("ºñÆÄ±« ¼³Á¤")]
+    [Header("ì±„íŒ… íˆìŠ¤í† ë¦¬")]
+    [SerializeField, Min(1)] private int maxChatHistoryEntries = 300;
+
+    [Header("ë¹„íŒŒê´´ ì„¤ì •")]
     [SerializeField] private bool makeDontDestroyOnLoad = true;
+
+    public int MaxChatHistoryEntries => Mathf.Max(1, maxChatHistoryEntries);
 
     private void Awake()
     {
@@ -63,7 +68,7 @@ public class NetworkSessionState : NetworkBehaviour
             if (transform.parent != null)
             {
                 Debug.LogError(
-                    "[NetworkSessionState] DontDestroyOnLoad¸¦ »ç¿ëÇÏ·Á¸é ·çÆ® ¿ÀºêÁ§Æ®¿©¾ß ÇÕ´Ï´Ù.",
+                    "[NetworkSessionState] DontDestroyOnLoadë¥¼ ì‚¬ìš©í•˜ë ¤ë©´ ë£¨íŠ¸ ì˜¤ë¸Œì íŠ¸ì—¬ì•¼ í•©ë‹ˆë‹¤.",
                     this);
             }
             else
@@ -71,6 +76,11 @@ public class NetworkSessionState : NetworkBehaviour
                 DontDestroyOnLoad(gameObject);
             }
         }
+    }
+
+    private void OnValidate()
+    {
+        maxChatHistoryEntries = Mathf.Max(1, maxChatHistoryEntries);
     }
 
     public override void OnDestroy()
@@ -102,7 +112,7 @@ public class NetworkSessionState : NetworkBehaviour
     {
         if (!IsServer || string.IsNullOrWhiteSpace(message)) return;
 
-        ChatHistory.Add(new P2PChatEntry(
+        ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Narration,
             ulong.MaxValue,
             string.Empty,
@@ -114,7 +124,7 @@ public class NetworkSessionState : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        ChatHistory.Add(new P2PChatEntry(
+        ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Divider,
             ulong.MaxValue,
             string.Empty,
@@ -128,11 +138,22 @@ public class NetworkSessionState : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(nickname)) return;
         if (string.IsNullOrWhiteSpace(message)) return;
 
-        ChatHistory.Add(new P2PChatEntry(
+        ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Normal,
             senderClientId,
             nickname.Trim(),
             message.Trim()
         ));
+    }
+
+    private void ServerAppendChatHistory(P2PChatEntry entry)
+    {
+        if (!IsServer || ChatHistory == null)
+            return;
+
+        while (ChatHistory.Count >= MaxChatHistoryEntries && ChatHistory.Count > 0)
+            ChatHistory.RemoveAt(0);
+
+        ChatHistory.Add(entry);
     }
 }

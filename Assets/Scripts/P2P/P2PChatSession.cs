@@ -8,12 +8,12 @@ public class P2PChatSession : NetworkBehaviour
 {
     public static P2PChatSession Instance { get; private set; }
 
-    [Header("Ã¤ÆÃ Á¦ÇÑ")]
+    [Header("ì±„íŒ… ì œí•œ")]
     [SerializeField] private float maxMessagesPerSecond = 2f;
     [SerializeField] private float muteDurationSeconds = 3f;
 
-    [Header("ÀÎ½ºÆåÅÍ Å×½ºÆ®")]
-    [SerializeField] private string editorTestNarrationText = "Å×½ºÆ® ³ª·¹ÀÌ¼Ç";
+    [Header("ì¸ìŠ¤í™í„° í…ŒìŠ¤íŠ¸")]
+    [SerializeField] private string editorTestNarrationText = "í…ŒìŠ¤íŠ¸ ë‚˜ë ˆì´ì…˜";
     [SerializeField] private bool logDebugMessages;
 
     private readonly Dictionary<ulong, Queue<float>> recentMessageTimes = new();
@@ -141,7 +141,7 @@ public class P2PChatSession : NetworkBehaviour
         if (mutedUntilTimes.TryGetValue(senderId, out float mutedUntil) && now < mutedUntil)
         {
             float remain = mutedUntil - now;
-            WarnOneClient(senderId, $"Ã¤ÆÃÀÌ Á¦ÇÑµÇ¾ú½À´Ï´Ù. {remain:0.0}ÃÊ ÈÄ ´Ù½Ã ½ÃµµÇÏ¼¼¿ä.");
+            WarnOneClient(senderId, $"ì±„íŒ…ì´ ì œí•œë˜ì—ˆìŠµë‹ˆë‹¤. {remain:0.0}ì´ˆ í›„ ë‹¤ì‹œ ì‹œë„í•˜ì„¸ìš”.");
             return false;
         }
 
@@ -157,7 +157,7 @@ public class P2PChatSession : NetworkBehaviour
             mutedUntilTimes[senderId] = now + muteDurationSeconds;
             queue.Clear();
 
-            WarnOneClient(senderId, $"Ã¤ÆÃ °ú´Ù ÀÔ·ÂÀ¸·Î {muteDurationSeconds:0.0}ÃÊ°£ Á¦ÇÑµË´Ï´Ù.");
+            WarnOneClient(senderId, $"ì±„íŒ… ê³¼ë‹¤ ì…ë ¥ìœ¼ë¡œ {muteDurationSeconds:0.0}ì´ˆê°„ ì œí•œë©ë‹ˆë‹¤.");
             return false;
         }
 
@@ -219,7 +219,10 @@ public class P2PChatSession : NetworkBehaviour
 
     private void OnHistoryChanged(NetworkListEvent<P2PChatEntry> changeEvent)
     {
-        RefreshHistoryUI();
+        if (P2PChatUI.Instance == null || Session == null)
+            return;
+
+        P2PChatUI.Instance.ApplyHistoryChange(Session.ChatHistory, changeEvent);
     }
 
     private void OnHostNicknameChanged(Unity.Collections.FixedString128Bytes previousValue,

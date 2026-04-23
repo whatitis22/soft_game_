@@ -10,43 +10,50 @@ public class P2PChatUI : MonoBehaviour
 {
     public static P2PChatUI Instance { get; private set; }
 
-    [Header("ÃÊ±â Á¢¼Ó UI ·çÆ®")]
+    [Header("ì´ˆê¸° ì ‘ì† UI ë£¨íŠ¸")]
     [SerializeField] private GameObject hostButtonRoot;
     [SerializeField] private GameObject clientButtonRoot;
     [SerializeField] private GameObject nicknameInputRoot;
     [SerializeField] private GameObject ipInputRoot;
     [SerializeField] private GameObject joinButtonRoot;
 
-    [Header("ÃÊ±â Á¢¼Ó UI ÂüÁ¶")]
+    [Header("ì´ˆê¸° ì ‘ì† UI ì°¸ì¡°")]
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_InputField ipInput;
 
-    [Header("´Ğ³×ÀÓ ÀÔ·Â")]
+    [Header("ë‹‰ë„¤ì„ ì…ë ¥")]
     [SerializeField] private TMP_Text nicknameCountText;
     [SerializeField] private int nicknameCharacterLimit = 12;
 
-    [Header("»óÅÂ ÅØ½ºÆ®")]
+    [Header("ìƒíƒœ í…ìŠ¤íŠ¸")]
     [SerializeField] private TMP_Text statusText;
-    [SerializeField] private string initialStatusText = "´Ğ³×ÀÓÀ» ÀÔ·ÂÇÏ¼¼¿ä.";
+    [SerializeField] private string initialStatusText = "ë‹‰ë„¤ì„ì„ ì…ë ¥í•˜ì„¸ìš”.";
     [SerializeField] private float statusClearDelay = 3f;
 
-    [Header("Ã¤ÆÃ ÆË¾÷")]
+    [Header("ì±„íŒ… íŒì—…")]
     [SerializeField] private GameObject chatToggleButtonRoot;
     [SerializeField] private Button chatToggleButton;
     [SerializeField] private GameObject chatPopupRoot;
     [SerializeField] private Button chatPopupCloseButton;
 
-    [Header("Ã¤ÆÃ È÷½ºÅä¸®")]
+    [Header("ì±„íŒ… íˆìŠ¤í† ë¦¬")]
     [SerializeField] private ScrollRect historyScrollRect;
     [SerializeField] private RectTransform historyContent;
     [SerializeField] private ChatNormalBlockView normalBlockPrefab;
     [SerializeField] private ChatNarrationBlockView narrationBlockPrefab;
     [SerializeField] private GameObject dividerBlockPrefab;
 
-    [Header("Ã¤ÆÃ ÀÔ·Â")]
+    [Header("ì±„íŒ… íˆìŠ¤í† ë¦¬ í‘œì‹œ")]
+    [SerializeField, Min(1)] private int historyPageSize = 30;
+    [SerializeField] private bool loadOlderOnScrollTop = true;
+    [SerializeField, Range(0.9f, 1f)] private float loadOlderScrollThreshold = 0.98f;
+    [SerializeField] private Button loadOlderHistoryButton;
+    [SerializeField] private TMP_Text historyRangeText;
+
+    [Header("ì±„íŒ… ì…ë ¥")]
     [SerializeField] private GameObject lobbyThingsRoot;
     [SerializeField] private Button jobSelectButton;
     [SerializeField] private JobSelectionPopupUI jobSelectionPopupUI;
@@ -57,6 +64,19 @@ public class P2PChatUI : MonoBehaviour
 
     private Coroutine statusClearCoroutine;
     private Coroutine scrollCoroutine;
+    private readonly List<GameObject> renderedHistoryBlocks = new List<GameObject>();
+
+    private NetworkList<P2PChatEntry> boundHistory;
+    private int displayedHistoryStartIndex;
+    private int displayedHistoryCount;
+    private bool suppressHistoryScrollEvent;
+
+    private int HistoryPageSize => Mathf.Max(1, historyPageSize);
+
+    private void OnValidate()
+    {
+        historyPageSize = Mathf.Max(1, historyPageSize);
+    }
 
     private void Awake()
     {
@@ -71,6 +91,10 @@ public class P2PChatUI : MonoBehaviour
 
         chatToggleButton.onClick.AddListener(ToggleChatPopup);
         chatPopupCloseButton.onClick.AddListener(CloseChatPopup);
+        if (loadOlderHistoryButton != null)
+            loadOlderHistoryButton.onClick.AddListener(LoadOlderHistoryPage);
+        if (historyScrollRect != null)
+            historyScrollRect.onValueChanged.AddListener(OnHistoryScrollValueChanged);
 
         chatSendButton.onClick.AddListener(TrySendChatFromInput);
         jobSelectButton.onClick.AddListener(OnClickJobSelectButton);
@@ -90,6 +114,18 @@ public class P2PChatUI : MonoBehaviour
         RefreshNicknameCountText();
 
         SetStatus(initialStatusText, false);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+
+        if (loadOlderHistoryButton != null)
+            loadOlderHistoryButton.onClick.RemoveListener(LoadOlderHistoryPage);
+
+        if (historyScrollRect != null)
+            historyScrollRect.onValueChanged.RemoveListener(OnHistoryScrollValueChanged);
     }
 
     public void ResetToInitialState()
@@ -117,7 +153,7 @@ public class P2PChatUI : MonoBehaviour
     {
         string trimmed = value.Trim();
 
-        // ¾ÕµÚ °ø¹é ÀÚµ¿ Á¦°Å
+        // ì•ë’¤ ê³µë°± ìë™ ì œê±°
         if (value != trimmed)
         {
             nicknameInput.SetTextWithoutNotify(trimmed);
@@ -140,7 +176,7 @@ public class P2PChatUI : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(nickname))
         {
-            SetStatus("´Ğ³×ÀÓÀº °ø¹é¸¸ ÀÔ·ÂÇÒ ¼ö ¾ø½À´Ï´Ù.");
+            SetStatus("ë‹‰ë„¤ì„ì€ ê³µë°±ë§Œ ì…ë ¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return false;
         }
 
@@ -213,7 +249,7 @@ public class P2PChatUI : MonoBehaviour
         joinButtonRoot.SetActive(true);
 
         P2PChatBootstrap.Instance.PrepareClient(nickname);
-        SetStatus("Á¢¼ÓÇÒ IPv4¸¦ ÀÔ·ÂÇÑ µÚ ÀÔÀå ¹öÆ°À» ´©¸£¼¼¿ä.");
+        SetStatus("ì ‘ì†í•  IPv4ë¥¼ ì…ë ¥í•œ ë’¤ ì…ì¥ ë²„íŠ¼ì„ ëˆ„ë¥´ì„¸ìš”.");
     }
 
     private void OnClickJoin()
@@ -271,39 +307,310 @@ public class P2PChatUI : MonoBehaviour
 
     public void RefreshHistory(NetworkList<P2PChatEntry> entries)
     {
+        boundHistory = entries;
+        RebuildLatestHistoryPage();
+    }
+
+    public void ApplyHistoryChange(NetworkList<P2PChatEntry> entries, NetworkListEvent<P2PChatEntry> changeEvent)
+    {
+        if (entries == null)
+        {
+            boundHistory = null;
+            ClearRenderedHistory();
+            RefreshHistoryPagingState();
+            return;
+        }
+
+        if (boundHistory != entries)
+        {
+            RefreshHistory(entries);
+            return;
+        }
+
+        switch (changeEvent.Type)
+        {
+            case NetworkListEvent<P2PChatEntry>.EventType.Add:
+                ApplyHistoryAdd(entries, changeEvent);
+                break;
+
+            case NetworkListEvent<P2PChatEntry>.EventType.Remove:
+            case NetworkListEvent<P2PChatEntry>.EventType.RemoveAt:
+                ApplyHistoryRemove(entries, changeEvent.Index);
+                break;
+
+            case NetworkListEvent<P2PChatEntry>.EventType.Value:
+                ApplyHistoryValueChange(entries, changeEvent.Index);
+                break;
+
+            case NetworkListEvent<P2PChatEntry>.EventType.Clear:
+                ClearRenderedHistory();
+                displayedHistoryStartIndex = 0;
+                displayedHistoryCount = 0;
+                RefreshHistoryPagingState();
+                break;
+
+            case NetworkListEvent<P2PChatEntry>.EventType.Insert:
+            case NetworkListEvent<P2PChatEntry>.EventType.Full:
+            default:
+                RebuildLatestHistoryPage();
+                break;
+        }
+    }
+
+    public void LoadOlderHistoryPage()
+    {
+        if (boundHistory == null || historyContent == null)
+            return;
+
+        int newStartIndex = Mathf.Max(0, displayedHistoryStartIndex - HistoryPageSize);
+        int prependCount = displayedHistoryStartIndex - newStartIndex;
+        if (prependCount <= 0)
+            return;
+
+        for (int i = displayedHistoryStartIndex - 1; i >= newStartIndex; i--)
+        {
+            GameObject block = CreateHistoryBlock(boundHistory[i], historyContent);
+            if (block == null)
+                continue;
+
+            block.transform.SetAsFirstSibling();
+            renderedHistoryBlocks.Insert(0, block);
+        }
+
+        displayedHistoryStartIndex = newStartIndex;
+        displayedHistoryCount = renderedHistoryBlocks.Count;
+        RefreshHistoryPagingState();
+        ScrollToTopDeferred();
+    }
+
+    private void RebuildLatestHistoryPage()
+    {
+        ClearRenderedHistory();
+
+        if (boundHistory == null || historyContent == null)
+        {
+            displayedHistoryStartIndex = 0;
+            displayedHistoryCount = 0;
+            RefreshHistoryPagingState();
+            return;
+        }
+
+        displayedHistoryStartIndex = Mathf.Max(0, boundHistory.Count - HistoryPageSize);
+
+        for (int i = displayedHistoryStartIndex; i < boundHistory.Count; i++)
+        {
+            GameObject block = CreateHistoryBlock(boundHistory[i], historyContent);
+            if (block != null)
+                renderedHistoryBlocks.Add(block);
+        }
+
+        displayedHistoryCount = renderedHistoryBlocks.Count;
+        RefreshHistoryPagingState();
+        ScrollToBottomDeferred();
+    }
+
+    private void ApplyHistoryAdd(NetworkList<P2PChatEntry> entries, NetworkListEvent<P2PChatEntry> changeEvent)
+    {
+        if (historyContent == null)
+            return;
+
+        int previousCount = Mathf.Max(0, entries.Count - 1);
+        bool wasSingleLatestPage =
+            displayedHistoryCount <= HistoryPageSize &&
+            displayedHistoryStartIndex == Mathf.Max(0, previousCount - HistoryPageSize);
+        bool shouldScrollToBottom = ShouldAutoScrollToBottom();
+
+        if (displayedHistoryCount == 0)
+        {
+            RebuildLatestHistoryPage();
+            return;
+        }
+
+        int visibleEndIndex = displayedHistoryStartIndex + displayedHistoryCount;
+        if (changeEvent.Index != visibleEndIndex)
+        {
+            RebuildLatestHistoryPage();
+            return;
+        }
+
+        GameObject block = CreateHistoryBlock(changeEvent.Value, historyContent);
+        if (block != null)
+        {
+            renderedHistoryBlocks.Add(block);
+            displayedHistoryCount = renderedHistoryBlocks.Count;
+        }
+
+        if (wasSingleLatestPage && displayedHistoryCount > HistoryPageSize)
+            RemoveFirstRenderedHistoryBlock();
+
+        RefreshHistoryPagingState();
+
+        if (shouldScrollToBottom)
+            ScrollToBottomDeferred();
+    }
+
+    private void ApplyHistoryRemove(NetworkList<P2PChatEntry> entries, int removedIndex)
+    {
+        if (entries.Count == 0)
+        {
+            ClearRenderedHistory();
+            displayedHistoryStartIndex = 0;
+            displayedHistoryCount = 0;
+            RefreshHistoryPagingState();
+            return;
+        }
+
+        if (removedIndex < displayedHistoryStartIndex)
+        {
+            displayedHistoryStartIndex = Mathf.Max(0, displayedHistoryStartIndex - 1);
+        }
+        else if (removedIndex < displayedHistoryStartIndex + displayedHistoryCount)
+        {
+            int localIndex = removedIndex - displayedHistoryStartIndex;
+            RemoveRenderedHistoryBlockAt(localIndex);
+        }
+
+        displayedHistoryCount = renderedHistoryBlocks.Count;
+        RefreshHistoryPagingState();
+    }
+
+    private void ApplyHistoryValueChange(NetworkList<P2PChatEntry> entries, int changedIndex)
+    {
+        if (historyContent == null)
+            return;
+
+        if (changedIndex < displayedHistoryStartIndex ||
+            changedIndex >= displayedHistoryStartIndex + displayedHistoryCount)
+        {
+            return;
+        }
+
+        int localIndex = changedIndex - displayedHistoryStartIndex;
+        if (localIndex < 0 || localIndex >= renderedHistoryBlocks.Count)
+            return;
+
+        if (renderedHistoryBlocks[localIndex] != null)
+            Destroy(renderedHistoryBlocks[localIndex]);
+
+        GameObject block = CreateHistoryBlock(entries[changedIndex], historyContent);
+        if (block == null)
+        {
+            renderedHistoryBlocks.RemoveAt(localIndex);
+            displayedHistoryCount = renderedHistoryBlocks.Count;
+            RefreshHistoryPagingState();
+            return;
+        }
+
+        block.transform.SetSiblingIndex(localIndex);
+        renderedHistoryBlocks[localIndex] = block;
+    }
+
+    private GameObject CreateHistoryBlock(P2PChatEntry entry, Transform parent)
+    {
+        switch (entry.EntryType)
+        {
+            case P2PChatEntryType.Normal:
+                {
+                    if (normalBlockPrefab == null)
+                        return null;
+
+                    ChatNormalBlockView block = Instantiate(normalBlockPrefab, parent);
+                    block.Bind(entry.Sender.ToString(), entry.Message.ToString());
+                    return block.gameObject;
+                }
+
+            case P2PChatEntryType.Narration:
+                {
+                    if (narrationBlockPrefab == null)
+                        return null;
+
+                    ChatNarrationBlockView block = Instantiate(narrationBlockPrefab, parent);
+                    block.Bind(entry.Message.ToString());
+                    return block.gameObject;
+                }
+
+            case P2PChatEntryType.Divider:
+                {
+                    if (dividerBlockPrefab == null)
+                        return null;
+
+                    return Instantiate(dividerBlockPrefab, parent);
+                }
+
+            default:
+                return null;
+        }
+    }
+
+    private void ClearRenderedHistory()
+    {
+        renderedHistoryBlocks.Clear();
+
         if (historyContent == null)
             return;
 
         for (int i = historyContent.childCount - 1; i >= 0; i--)
             Destroy(historyContent.GetChild(i).gameObject);
+    }
 
-        foreach (P2PChatEntry entry in entries)
+    private void RemoveFirstRenderedHistoryBlock()
+    {
+        RemoveRenderedHistoryBlockAt(0);
+        displayedHistoryStartIndex++;
+        displayedHistoryCount = renderedHistoryBlocks.Count;
+    }
+
+    private void RemoveRenderedHistoryBlockAt(int localIndex)
+    {
+        if (localIndex < 0 || localIndex >= renderedHistoryBlocks.Count)
+            return;
+
+        if (renderedHistoryBlocks[localIndex] != null)
+            Destroy(renderedHistoryBlocks[localIndex]);
+
+        renderedHistoryBlocks.RemoveAt(localIndex);
+    }
+
+    private void RefreshHistoryPagingState()
+    {
+        bool canLoadOlder = boundHistory != null && displayedHistoryStartIndex > 0;
+
+        if (loadOlderHistoryButton != null)
+            loadOlderHistoryButton.interactable = canLoadOlder;
+
+        if (historyRangeText == null)
+            return;
+
+        int totalCount = boundHistory != null ? boundHistory.Count : 0;
+        if (totalCount <= 0 || displayedHistoryCount <= 0)
         {
-            switch (entry.EntryType)
-            {
-                case P2PChatEntryType.Normal:
-                    {
-                        ChatNormalBlockView block = Instantiate(normalBlockPrefab, historyContent);
-                        block.Bind(entry.Sender.ToString(), entry.Message.ToString());
-                        break;
-                    }
-
-                case P2PChatEntryType.Narration:
-                    {
-                        ChatNarrationBlockView block = Instantiate(narrationBlockPrefab, historyContent);
-                        block.Bind(entry.Message.ToString());
-                        break;
-                    }
-
-                case P2PChatEntryType.Divider:
-                    {
-                        Instantiate(dividerBlockPrefab, historyContent);
-                        break;
-                    }
-            }
+            historyRangeText.text = "0/0";
+            return;
         }
 
-        ScrollToBottomDeferred();
+        int firstVisibleNumber = displayedHistoryStartIndex + 1;
+        int lastVisibleNumber = Mathf.Min(totalCount, displayedHistoryStartIndex + displayedHistoryCount);
+        historyRangeText.text = $"{firstVisibleNumber}-{lastVisibleNumber}/{totalCount}";
+    }
+
+    private bool ShouldAutoScrollToBottom()
+    {
+        if (historyScrollRect == null || chatPopupRoot == null || !chatPopupRoot.activeSelf)
+            return true;
+
+        return historyScrollRect.verticalNormalizedPosition <= 0.05f;
+    }
+
+    private void OnHistoryScrollValueChanged(Vector2 normalizedPosition)
+    {
+        if (suppressHistoryScrollEvent || !loadOlderOnScrollTop)
+            return;
+
+        if (boundHistory == null || displayedHistoryStartIndex <= 0)
+            return;
+
+        if (normalizedPosition.y >= loadOlderScrollThreshold)
+            LoadOlderHistoryPage();
     }
 
     private void ScrollToBottomDeferred()
@@ -311,17 +618,29 @@ public class P2PChatUI : MonoBehaviour
         if (scrollCoroutine != null)
             StopCoroutine(scrollCoroutine);
 
-        scrollCoroutine = StartCoroutine(CoScrollToBottomNextFrame());
+        scrollCoroutine = StartCoroutine(CoScrollToNextFrame(0f));
     }
 
-    private IEnumerator CoScrollToBottomNextFrame()
+    private void ScrollToTopDeferred()
+    {
+        if (scrollCoroutine != null)
+            StopCoroutine(scrollCoroutine);
+
+        scrollCoroutine = StartCoroutine(CoScrollToNextFrame(1f));
+    }
+
+    private IEnumerator CoScrollToNextFrame(float verticalNormalizedPosition)
     {
         yield return null;
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(historyContent);
 
         if (historyScrollRect != null)
-            historyScrollRect.verticalNormalizedPosition = 0f;
+        {
+            suppressHistoryScrollEvent = true;
+            historyScrollRect.verticalNormalizedPosition = verticalNormalizedPosition;
+            suppressHistoryScrollEvent = false;
+        }
 
         scrollCoroutine = null;
     }
