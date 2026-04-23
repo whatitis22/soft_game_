@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(NetworkObject))]
 public class NetworkPlayerState : NetworkBehaviour
 {
-    [Header("°ø°³ »óÅÂ")]
+    [Header("ê³µê°œ ìƒíƒœ")]
     public NetworkVariable<int> PlayerIndex =
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -31,8 +31,8 @@ public class NetworkPlayerState : NetworkBehaviour
     public NetworkVariable<int> SubmittedCard =
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    [Header("°³ÀÎ ºñ°ø°³ »óÅÂ")]
-    // bit 0 = Ä«µå1, bit 1 = Ä«µå2 ... bit 5 = Ä«µå6
+    [Header("ê°œì¸ ë¹„ê³µê°œ ìƒíƒœ")]
+    // bit 0 = ì¹´ë“œ1, bit 1 = ì¹´ë“œ2 ... bit 5 = ì¹´ë“œ6
     public NetworkVariable<byte> RemainingNumberCardsMask =
         new(0b0011_1111, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
 
@@ -45,6 +45,8 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public override void OnDestroy()
     {
+        NetworkPlayerRegistry.Unregister(this);
+
         if (InventoryItemIds != null)
             InventoryItemIds.Dispose();
 
@@ -53,10 +55,17 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        NetworkPlayerRegistry.Register(this);
+
         if (IsOwner)
         {
-            Debug.Log($"³» PlayerObject ½ºÆù ¿Ï·á / OwnerClientId={OwnerClientId}");
+            Debug.Log($"ë‚´ PlayerObject ìŠ¤í° ì™„ë£Œ / OwnerClientId={OwnerClientId}");
         }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        NetworkPlayerRegistry.Unregister(this);
     }
 
     public void ServerInitializePlayer(int playerIndex, string nickname, JobType initialJob)
@@ -175,19 +184,19 @@ public class NetworkPlayerState : NetworkBehaviour
         if (cardValue < 1 || cardValue > 6)
             return;
 
-        // ÀÌ¹Ì ÀÌ¹ø ¶ó¿îµå¿¡ Á¦ÃâÇßÀ¸¸é ¹«½Ã
+        // ì´ë¯¸ ì´ë²ˆ ë¼ìš´ë“œì— ì œì¶œí–ˆìœ¼ë©´ ë¬´ì‹œ
         if (SubmittedCard.Value >= 1 && SubmittedCard.Value <= 6)
             return;
 
-        // ¾ÆÁ÷ ³²¾Æ ÀÖ´Â Ä«µåÀÎÁö È®ÀÎ
+        // ì•„ì§ ë‚¨ì•„ ìˆëŠ” ì¹´ë“œì¸ì§€ í™•ì¸
         if (!HasNumberCard(cardValue))
             return;
 
-        // ¼­¹ö È®Á¤
+        // ì„œë²„ í™•ì •
         SubmittedCard.Value = cardValue;
         ServerConsumeNumberCard(cardValue);
 
-        Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} Á¦Ãâ");
+        Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} ì œì¶œ");
     }
 
     [Rpc(SendTo.Server)]
@@ -216,7 +225,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (senderId != OwnerClientId)
             return;
 
-        // È£½ºÆ®´Â ÁØºñ Åä±Û ´ë»óÀÌ ¾Æ´Ô
+        // í˜¸ìŠ¤íŠ¸ëŠ” ì¤€ë¹„ í† ê¸€ ëŒ€ìƒì´ ì•„ë‹˜
         if (NetworkSessionState.Instance != null &&
             senderId == NetworkSessionState.Instance.HostClientId.Value)
         {

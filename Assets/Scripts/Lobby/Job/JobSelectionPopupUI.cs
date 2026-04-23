@@ -4,22 +4,22 @@ using UnityEngine.UI;
 
 public class JobSelectionPopupUI : MonoBehaviour
 {
-    [Header("ÆË¾÷")]
+    [Header("íŒì—…")]
     [SerializeField] private GameObject popupRoot;
     [SerializeField] private Button closeButton;
     [SerializeField] private Button selectButton;
 
-    [Header("ÁÂÃø ¸®½ºÆ®")]
+    [Header("ì¢Œì¸¡ ë¦¬ìŠ¤íŠ¸")]
     [SerializeField] private RectTransform jobButtonContent;
     [SerializeField] private JobSelectListItemView jobButtonPrefab;
 
-    [Header("¿ìÃø Á¤º¸")]
+    [Header("ìš°ì¸¡ ì •ë³´")]
     [SerializeField] private Image portraitImage;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text shortDescriptionText;
     [SerializeField] private TMP_Text detailDescriptionText;
 
-    [Header("Á÷¾÷ µ¥ÀÌÅÍ")]
+    [Header("ì§ì—… ë°ì´í„°")]
     [SerializeField] private JobDefinition[] jobDefinitions;
 
     private JobDefinition currentPreview;
@@ -61,18 +61,10 @@ public class JobSelectionPopupUI : MonoBehaviour
 
     private void ResolveLocalPlayerState()
     {
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
-        {
-            if (player != null && player.IsOwner)
-            {
-                localPlayerState = player;
-                return;
-            }
-        }
-
-        localPlayerState = null;
+        if (NetworkPlayerRegistry.TryGetLocalPlayer(out NetworkPlayerState player))
+            localPlayerState = player;
+        else
+            localPlayerState = null;
     }
 
     private void BuildList()

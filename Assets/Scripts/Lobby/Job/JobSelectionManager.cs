@@ -45,13 +45,8 @@ public class JobSelectionManager : MonoBehaviour
         if (targetJob == JobType.None)
             return false;
 
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
+        foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
         {
-            if (!player.IsSpawned)
-                continue;
-
             if (player.OwnerClientId == ignoreOwnerClientId)
                 continue;
 
@@ -93,15 +88,15 @@ public class JobSelectionManager : MonoBehaviour
     {
         return job switch
         {
-            JobType.Hero => "¿ë»ç",
-            JobType.Saint => "¼º³à",
-            JobType.Witch => "¸¶³à",
-            JobType.Archer => "±Ã¼ö",
-            JobType.Fighter => "°İÅõ°¡",
-            JobType.Butcher => "µµ»ìÀÚ",
-            JobType.Guardian => "¼öÈ£ÀÚ",
-            JobType.Assassin => "¾Ï»ìÀÚ",
-            _ => "¾øÀ½"
+            JobType.Hero => "ìš©ì‚¬",
+            JobType.Saint => "ì„±ë…€",
+            JobType.Witch => "ë§ˆë…€",
+            JobType.Archer => "ê¶ìˆ˜",
+            JobType.Fighter => "ê²©íˆ¬ê°€",
+            JobType.Butcher => "ë„ì‚´ì",
+            JobType.Guardian => "ìˆ˜í˜¸ì",
+            JobType.Assassin => "ì•”ì‚´ì",
+            _ => "ì—†ìŒ"
         };
     }
 }

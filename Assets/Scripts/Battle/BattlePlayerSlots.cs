@@ -13,13 +13,13 @@ public class BattleStandingPrefabEntry
 
 public class BattlePlayerSlots : MonoBehaviour
 {
-    [Header("0¹ø = p1 À§Ä¡, 1¹ø = p2 À§Ä¡ ...")]
+    [Header("0ë²ˆ = p1 ìœ„ì¹˜, 1ë²ˆ = p2 ìœ„ì¹˜ ...")]
     [SerializeField] private Transform[] playerSlots;
 
-    [Header("Á÷¾÷º° ÀüÅõ ½ºÅÄµù ÇÁ¸®Æé")]
+    [Header("ì§ì—…ë³„ ì „íˆ¬ ìŠ¤íƒ ë”© í”„ë¦¬í©")]
     [SerializeField] private BattleStandingPrefabEntry[] battleStandingPrefabs;
 
-    [Header("ÀÚµ¿ ¼ÒÈ¯")]
+    [Header("ìë™ ì†Œí™˜")]
     [SerializeField] private bool spawnOnStart = true;
     [SerializeField] private float waitTimeout = 3f;
 
@@ -45,8 +45,7 @@ public class BattlePlayerSlots : MonoBehaviour
 
         while (elapsed < waitTimeout)
         {
-            NetworkPlayerState[] players =
-                FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
+            List<NetworkPlayerState> players = NetworkPlayerRegistry.GetSpawnedPlayers();
 
             if (HasSpawnablePlayers(players))
             {
@@ -58,15 +57,15 @@ public class BattlePlayerSlots : MonoBehaviour
             yield return null;
         }
 
-        Debug.LogWarning("BattlePlayerSlots: ¾À ¾È¿¡¼­ À¯È¿ÇÑ NetworkPlayerState¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+        Debug.LogWarning("BattlePlayerSlots: ì”¬ ì•ˆì—ì„œ ìœ íš¨í•œ NetworkPlayerStateë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
     }
 
-    private bool HasSpawnablePlayers(NetworkPlayerState[] players)
+    private bool HasSpawnablePlayers(IReadOnlyList<NetworkPlayerState> players)
     {
-        if (players == null || players.Length == 0)
+        if (players == null || players.Count == 0)
             return false;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (IsSpawnable(players[i]))
                 return true;
@@ -91,26 +90,23 @@ public class BattlePlayerSlots : MonoBehaviour
 
     public void RespawnNow()
     {
-        NetworkPlayerState[] players =
-            FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        SpawnFromPlayers(players);
+        SpawnFromPlayers(NetworkPlayerRegistry.GetSpawnedPlayers());
     }
 
-    public void SpawnFromPlayers(NetworkPlayerState[] players)
+    public void SpawnFromPlayers(IReadOnlyList<NetworkPlayerState> players)
     {
         UnsubscribeAllPlayerStateEvents();
         ClearAll();
 
-        if (players == null || players.Length == 0)
+        if (players == null || players.Count == 0)
         {
-            Debug.LogWarning("BattlePlayerSlots: ¼ÒÈ¯ÇÒ ÇÃ·¹ÀÌ¾î°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("BattlePlayerSlots: ì†Œí™˜í•  í”Œë ˆì´ì–´ê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         List<NetworkPlayerState> validPlayers = new List<NetworkPlayerState>();
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (!IsSpawnable(players[i]))
                 continue;
@@ -120,7 +116,7 @@ public class BattlePlayerSlots : MonoBehaviour
 
         if (validPlayers.Count == 0)
         {
-            Debug.LogWarning("BattlePlayerSlots: ¾ÆÁ÷ PlayerIndex / Job µ¥ÀÌÅÍ°¡ ÁØºñµÈ ÇÃ·¹ÀÌ¾î°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("BattlePlayerSlots: ì•„ì§ PlayerIndex / Job ë°ì´í„°ê°€ ì¤€ë¹„ëœ í”Œë ˆì´ì–´ê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -149,19 +145,19 @@ public class BattlePlayerSlots : MonoBehaviour
 
         if (playerIndex < 0 || playerIndex >= playerSlots.Length)
         {
-            Debug.LogWarning($"BattlePlayerSlots: playerIndex {playerIndex} ¿¡ ÇØ´çÇÏ´Â ½½·ÔÀÌ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"BattlePlayerSlots: playerIndex {playerIndex} ì— í•´ë‹¹í•˜ëŠ” ìŠ¬ë¡¯ì´ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (!TryGetStandingPrefab(jobType, out GameObject prefab) || prefab == null)
         {
-            Debug.LogWarning($"BattlePlayerSlots: Á÷¾÷ '{jobType}' ¿¡ ´ëÀÀµÇ´Â ÀüÅõ ½ºÅÄµù ÇÁ¸®ÆéÀÌ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"BattlePlayerSlots: ì§ì—… '{jobType}' ì— ëŒ€ì‘ë˜ëŠ” ì „íˆ¬ ìŠ¤íƒ ë”© í”„ë¦¬í©ì´ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (spawnedStandings.ContainsKey(playerIndex))
         {
-            Debug.LogWarning($"BattlePlayerSlots: p{playerIndex + 1} ÀÌ Áßº¹ °¨ÁöµÇ¾ú½À´Ï´Ù. µÚÀÇ Ç×¸ñÀº ¹«½ÃÇÕ´Ï´Ù.");
+            Debug.LogWarning($"BattlePlayerSlots: p{playerIndex + 1} ì´ ì¤‘ë³µ ê°ì§€ë˜ì—ˆìŠµë‹ˆë‹¤. ë’¤ì˜ í•­ëª©ì€ ë¬´ì‹œí•©ë‹ˆë‹¤.");
             return;
         }
 
@@ -173,7 +169,7 @@ public class BattlePlayerSlots : MonoBehaviour
         BattlePlayerStanding standing = instance.GetComponent<BattlePlayerStanding>();
         if (standing == null)
         {
-            Debug.LogWarning($"{instance.name}: BattlePlayerStanding ÄÄÆ÷³ÍÆ®°¡ ¾ø¾î ÀÚµ¿ Ãß°¡Çß½À´Ï´Ù.");
+            Debug.LogWarning($"{instance.name}: BattlePlayerStanding ì»´í¬ë„ŒíŠ¸ê°€ ì—†ì–´ ìë™ ì¶”ê°€í–ˆìŠµë‹ˆë‹¤.");
             standing = instance.AddComponent<BattlePlayerStanding>();
         }
 

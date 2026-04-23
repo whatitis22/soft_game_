@@ -10,7 +10,7 @@ public class BattleLocalCardSubmitter : MonoBehaviour
     {
         if (cardValue < 1 || cardValue > 6)
         {
-            Debug.LogWarning($"BattleLocalCardSubmitter: Àß¸øµÈ Ä«µå °ªÀÌ µé¾î¿Ô½À´Ï´Ù. ({cardValue})");
+            Debug.LogWarning($"BattleLocalCardSubmitter: ì˜ëª»ëœ ì¹´ë“œ ê°’ì´ ë“¤ì–´ì™”ìŠµë‹ˆë‹¤. ({cardValue})");
 
             if (popupController != null)
                 popupController.SetOpenButtonInteractable(true);
@@ -20,7 +20,7 @@ public class BattleLocalCardSubmitter : MonoBehaviour
 
         if (!TryGetLocalPlayerState(out NetworkPlayerState localPlayer))
         {
-            Debug.LogWarning("BattleLocalCardSubmitter: ·ÎÄÃ ÇÃ·¹ÀÌ¾îÀÇ NetworkPlayerState¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+            Debug.LogWarning("BattleLocalCardSubmitter: ë¡œì»¬ í”Œë ˆì´ì–´ì˜ NetworkPlayerStateë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
 
             if (popupController != null)
                 popupController.SetOpenButtonInteractable(true);
@@ -33,7 +33,7 @@ public class BattleLocalCardSubmitter : MonoBehaviour
 
         if (!localPlayer.HasNumberCard(cardValue))
         {
-            Debug.LogWarning($"BattleLocalCardSubmitter: Ä«µå {cardValue} ´Â ÀÌ¹Ì »ç¿ëµÈ Ä«µåÀÔ´Ï´Ù.");
+            Debug.LogWarning($"BattleLocalCardSubmitter: ì¹´ë“œ {cardValue} ëŠ” ì´ë¯¸ ì‚¬ìš©ëœ ì¹´ë“œì…ë‹ˆë‹¤.");
 
             if (popupController != null)
                 popupController.SetOpenButtonInteractable(true);
@@ -46,26 +46,6 @@ public class BattleLocalCardSubmitter : MonoBehaviour
 
     private bool TryGetLocalPlayerState(out NetworkPlayerState result)
     {
-        result = null;
-
-        if (NetworkManager.Singleton == null)
-            return false;
-
-        ulong localClientId = NetworkManager.Singleton.LocalClientId;
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] == null)
-                continue;
-
-            if (players[i].OwnerClientId == localClientId)
-            {
-                result = players[i];
-                return true;
-            }
-        }
-
-        return false;
+        return NetworkPlayerRegistry.TryGetLocalPlayer(out result);
     }
 }

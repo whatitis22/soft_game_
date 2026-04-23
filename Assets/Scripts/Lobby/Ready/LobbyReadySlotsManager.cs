@@ -70,18 +70,13 @@ public class LobbyReadySlotsManager : MonoBehaviour
                 pair.Value.SetActive(false);
         }
 
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
         ulong hostClientId = ulong.MaxValue;
         if (NetworkSessionState.Instance != null)
             hostClientId = NetworkSessionState.Instance.HostClientId.Value;
 
-        foreach (NetworkPlayerState player in players)
+        foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
         {
-            if (player == null || !player.IsSpawned)
-                continue;
-
-            // È£½ºÆ®´Â ÁØºñ ¾ÆÀÌÄÜ Ç¥½Ã ¾È ÇÔ
+            // í˜¸ìŠ¤íŠ¸ëŠ” ì¤€ë¹„ ì•„ì´ì½˜ í‘œì‹œ ì•ˆ í•¨
             if (player.OwnerClientId == hostClientId)
                 continue;
 

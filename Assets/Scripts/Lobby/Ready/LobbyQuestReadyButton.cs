@@ -12,12 +12,12 @@ public class LobbyQuestReadyButton : MonoBehaviour
     [Header("Scene")]
     [SerializeField] private string targetSceneName;
 
-    [Header("¹®±¸")]
-    [SerializeField] private string hostLabel = "Äù½ºÆ® ¼±ÅÃ";
-    [SerializeField] private string clientReadyOffLabel = "Äù½ºÆ® ÁØºñ";
-    [SerializeField] private string clientReadyOnLabel = "Ãë¼Ò";
+    [Header("ë¬¸êµ¬")]
+    [SerializeField] private string hostLabel = "í€˜ìŠ¤íŠ¸ ì„ íƒ";
+    [SerializeField] private string clientReadyOffLabel = "í€˜ìŠ¤íŠ¸ ì¤€ë¹„";
+    [SerializeField] private string clientReadyOnLabel = "ì·¨ì†Œ";
 
-    [Header("°»½Å ÁÖ±â")]
+    [Header("ê°±ì‹  ì£¼ê¸°")]
     [SerializeField] private float refreshInterval = 0.2f;
 
     private float nextRefreshTime;
@@ -87,13 +87,13 @@ public class LobbyQuestReadyButton : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(targetSceneName))
         {
-            P2PChatUI.Instance.SetStatus("ÀÌµ¿ÇÒ ¾À ÀÌ¸§ÀÌ ºñ¾î ÀÖ½À´Ï´Ù.");
+            P2PChatUI.Instance.SetStatus("ì´ë™í•  ì”¬ ì´ë¦„ì´ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (!NetworkManager.Singleton.NetworkConfig.EnableSceneManagement)
         {
-            P2PChatUI.Instance.SetStatus("Network Scene Management°¡ ºñÈ°¼ºÈ­µÇ¾î ÀÖ½À´Ï´Ù.");
+            P2PChatUI.Instance.SetStatus("Network Scene Managementê°€ ë¹„í™œì„±í™”ë˜ì–´ ìˆìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -106,7 +106,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
         if (!AreAllClientsReady())
         {
-            P2PChatUI.Instance.SetStatus("¸ğµç ÀÎ¿øÀÌ ÁØºñµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            P2PChatUI.Instance.SetStatus("ëª¨ë“  ì¸ì›ì´ ì¤€ë¹„ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -119,7 +119,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
         if (status != SceneEventProgressStatus.Started)
         {
-            P2PChatUI.Instance.SetStatus($"¾À ÀÌµ¿¿¡ ½ÇÆĞÇß½À´Ï´Ù. ({status})");
+            P2PChatUI.Instance.SetStatus($"ì”¬ ì´ë™ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ({status})");
             return;
         }
 
@@ -128,19 +128,14 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
     private bool AreAllClientsReady()
     {
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
         ulong hostClientId = ulong.MaxValue;
         if (NetworkSessionState.Instance != null)
             hostClientId = NetworkSessionState.Instance.HostClientId.Value;
 
         bool foundAnyClient = false;
 
-        foreach (NetworkPlayerState player in players)
+        foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
         {
-            if (player == null || !player.IsSpawned)
-                continue;
-
             if (player.OwnerClientId == hostClientId)
                 continue;
 
@@ -158,29 +153,13 @@ public class LobbyQuestReadyButton : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer)
             return;
 
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
-        {
-            if (player == null || !player.IsSpawned)
-                continue;
-
+        foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
             player.ServerSetReady(false);
-        }
     }
 
     private int CountSpawnedPlayers()
     {
-        int count = 0;
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
-        {
-            if (player != null && player.IsSpawned)
-                count++;
-        }
-
-        return count;
+        return NetworkPlayerRegistry.CountSpawnedPlayers();
     }
 
     private NetworkPlayerState FindLocalPlayer()
@@ -188,15 +167,10 @@ public class LobbyQuestReadyButton : MonoBehaviour
         if (cachedLocalPlayer != null && cachedLocalPlayer.IsSpawned && cachedLocalPlayer.IsOwner)
             return cachedLocalPlayer;
 
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
+        if (NetworkPlayerRegistry.TryGetLocalPlayer(out NetworkPlayerState player))
         {
-            if (player != null && player.IsSpawned && player.IsOwner)
-            {
-                cachedLocalPlayer = player;
-                return player;
-            }
+            cachedLocalPlayer = player;
+            return player;
         }
 
         cachedLocalPlayer = null;

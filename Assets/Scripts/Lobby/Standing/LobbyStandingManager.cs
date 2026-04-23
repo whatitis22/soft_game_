@@ -5,17 +5,17 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class LobbyStandingManager : MonoBehaviour
 {
-    [Header("½½·Ô")]
-    [SerializeField] private RectTransform[] standingSlots; // ¿ŞÂÊ -> ¿À¸¥ÂÊ
+    [Header("ìŠ¬ë¡¯")]
+    [SerializeField] private RectTransform[] standingSlots; // ì™¼ìª½ -> ì˜¤ë¥¸ìª½
     [SerializeField] private int centerSlotIndex = 2;
 
-    [Header("ÇÁ¸®ÆÕ")]
+    [Header("í”„ë¦¬íŒ¹")]
     [SerializeField] private LobbyStandingView standingPrefab;
 
-    [Header("Á÷¾÷ µ¥ÀÌÅÍ")]
+    [Header("ì§ì—… ë°ì´í„°")]
     [SerializeField] private JobDefinition[] jobDefinitions;
 
-    [Header("Ç¥½Ã ¼³Á¤")]
+    [Header("í‘œì‹œ ì„¤ì •")]
     [SerializeField] private float localPlayerScaleMultiplier = 1.3f;
     [SerializeField] private float refreshInterval = 0.25f;
 
@@ -40,8 +40,6 @@ public class LobbyStandingManager : MonoBehaviour
 
     private string BuildStateSignature()
     {
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
         StringBuilder sb = new StringBuilder(256);
 
         ulong hostId = ulong.MaxValue;
@@ -50,11 +48,8 @@ public class LobbyStandingManager : MonoBehaviour
 
         sb.Append("host=").Append(hostId).Append(';');
 
-        foreach (NetworkPlayerState player in players)
+        foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
         {
-            if (player == null || !player.IsSpawned)
-                continue;
-
             sb.Append(player.OwnerClientId).Append('|');
             sb.Append(player.PlayerIndex.Value).Append('|');
             sb.Append(player.DisplayNickname.Value.ToString()).Append('|');
@@ -76,7 +71,7 @@ public class LobbyStandingManager : MonoBehaviour
         if (allPlayers.Count == 0)
             return;
 
-        // ³» ÀÚ½Å Á¦¿Ü ¸ñ·Ï
+        // ë‚´ ìì‹  ì œì™¸ ëª©ë¡
         List<NetworkPlayerState> others = new List<NetworkPlayerState>();
         foreach (NetworkPlayerState player in allPlayers)
         {
@@ -84,10 +79,10 @@ public class LobbyStandingManager : MonoBehaviour
                 others.Add(player);
         }
 
-        // ³» ÀÚ½ÅÀº °¡¿îµ¥
+        // ë‚´ ìì‹ ì€ ê°€ìš´ë°
         CreateStanding(localPlayer, centerSlotIndex, true);
 
-        // ³ª¸ÓÁö´Â °¡¿îµ¥ Á¦¿Ü ½½·Ô¿¡ ¿ŞÂÊºÎÅÍ ¼ø¼­´ë·Î
+        // ë‚˜ë¨¸ì§€ëŠ” ê°€ìš´ë° ì œì™¸ ìŠ¬ë¡¯ì— ì™¼ìª½ë¶€í„° ìˆœì„œëŒ€ë¡œ
         List<int> otherSlotIndices = GetOtherSlotIndicesLeftToRight();
         for (int i = 0; i < others.Count && i < otherSlotIndices.Count; i++)
         {
@@ -112,30 +107,15 @@ public class LobbyStandingManager : MonoBehaviour
 
     private NetworkPlayerState FindLocalPlayer()
     {
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-
-        foreach (NetworkPlayerState player in players)
-        {
-            if (player != null && player.IsSpawned && player.IsOwner)
-                return player;
-        }
-
+        if (NetworkPlayerRegistry.TryGetLocalPlayer(out NetworkPlayerState player))
+            return player;
+        
         return null;
     }
 
     private List<NetworkPlayerState> GetSortedPlayers()
     {
-        NetworkPlayerState[] players = FindObjectsByType<NetworkPlayerState>(FindObjectsSortMode.None);
-        List<NetworkPlayerState> result = new List<NetworkPlayerState>();
-
-        foreach (NetworkPlayerState player in players)
-        {
-            if (player != null && player.IsSpawned)
-                result.Add(player);
-        }
-
-        result.Sort((a, b) => a.PlayerIndex.Value.CompareTo(b.PlayerIndex.Value));
-        return result;
+        return NetworkPlayerRegistry.GetSpawnedPlayersSortedByIndex();
     }
 
     private void CreateStanding(NetworkPlayerState player, int slotIndex, bool isLocalPlayer)
