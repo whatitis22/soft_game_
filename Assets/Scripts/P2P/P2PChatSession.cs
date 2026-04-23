@@ -138,7 +138,7 @@ public class P2PChatSession : NetworkBehaviour
     [ClientRpc]
     private void ShowStatusClientRpc(string message, ClientRpcParams clientRpcParams = default)
     {
-        P2PChatUI.Instance.SetStatus(message);
+        GameStatusMessageRouter.Show(message);
     }
 
     private bool TryAcceptChatOnServer(ulong senderId, string message)
@@ -195,8 +195,7 @@ public class P2PChatSession : NetworkBehaviour
 
         if (clientId == NetworkManager.ServerClientId)
         {
-            if (P2PChatUI.Instance != null)
-                P2PChatUI.Instance.SetStatus(message);
+            GameStatusMessageRouter.Show(message);
             return;
         }
 

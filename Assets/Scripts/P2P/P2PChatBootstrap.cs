@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
@@ -14,9 +15,9 @@ public class P2PChatBootstrap : MonoBehaviour
 {
     public static P2PChatBootstrap Instance { get; private set; }
 
-    [Header("³×Æ®¿öÅ© ¼³Á¤")]
+    [Header("ë„¤íŠ¸ì›Œí¬ ì„¤ì •")]
     [SerializeField] private ushort port = 7777;
-    [SerializeField] private int maxParticipants = 5; // È£½ºÆ® Æ÷ÇÔ
+    [SerializeField] private int maxParticipants = 5; // í˜¸ìŠ¤íŠ¸ í¬í•¨
     [SerializeField] private float connectTimeoutSeconds = 8f;
 
     private NetworkManager networkManager;
@@ -77,6 +78,12 @@ public class P2PChatBootstrap : MonoBehaviour
         StopConnectTimeout();
     }
 
+    public void CancelClientJoinPreparation()
+    {
+        ShutdownIfNeeded();
+        localNickname = string.Empty;
+    }
+
     public bool StartHost(string nickname)
     {
         ShutdownIfNeeded();
@@ -92,7 +99,7 @@ public class P2PChatBootstrap : MonoBehaviour
         bool started = networkManager.StartHost();
         if (!started)
         {
-            P2PChatUI.Instance.SetStatus("¹æ »ı¼º¿¡ ½ÇÆĞÇß½À´Ï´Ù.");
+            GameStatusMessageRouter.Show("ë°© ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
             return false;
         }
 
@@ -107,7 +114,7 @@ public class P2PChatBootstrap : MonoBehaviour
         }
 
         P2PChatUI.Instance.EnterRoomAsHost();
-        P2PChatUI.Instance.SetStatus("¹æÀÌ »ı¼ºµÇ¾ú½À´Ï´Ù.");
+        GameStatusMessageRouter.Show("ë°©ì´ ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤.");
 
         return true;
     }
@@ -118,7 +125,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
         if (!IsValidIpv4(trimmedIp))
         {
-            P2PChatUI.Instance.SetStatus("À¯È¿ÇÏÁö ¾ÊÀº IPv4 ÁÖ¼ÒÀÔ´Ï´Ù.");
+            GameStatusMessageRouter.Show("ìœ íš¨í•˜ì§€ ì•Šì€ IPv4 ì£¼ì†Œì…ë‹ˆë‹¤.");
             return false;
         }
 
@@ -134,7 +141,7 @@ public class P2PChatBootstrap : MonoBehaviour
         if (!started)
         {
             clientJoinPending = false;
-            P2PChatUI.Instance.SetStatus("ÀÔÀå¿¡ ½ÇÆĞÇß½À´Ï´Ù.");
+            GameStatusMessageRouter.Show("ì…ì¥ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
             return false;
         }
 
@@ -154,7 +161,7 @@ public class P2PChatBootstrap : MonoBehaviour
         StopConnectTimeout();
 
         P2PChatUI.Instance.EnterRoomAsClient();
-        P2PChatUI.Instance.SetStatus($"{connectedHostNickname} ´ÔÀÇ ¹æ¿¡ ÀÔÀåÇß½À´Ï´Ù.");
+        GameStatusMessageRouter.Show($"{connectedHostNickname} ë‹˜ì˜ ë°©ì— ì…ì¥í–ˆìŠµë‹ˆë‹¤.");
     }
 
     public bool TryGetNickname(ulong clientId, out string nickname)
@@ -181,7 +188,7 @@ public class P2PChatBootstrap : MonoBehaviour
         {
             response.Approved = false;
             response.CreatePlayerObject = false;
-            response.Reason = "´Ğ³×ÀÓÀÌ ºñ¾î ÀÖ½À´Ï´Ù.";
+            response.Reason = "ë‹‰ë„¤ì„ì´ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.";
             response.Pending = false;
             return;
         }
@@ -190,7 +197,16 @@ public class P2PChatBootstrap : MonoBehaviour
         {
             response.Approved = false;
             response.CreatePlayerObject = false;
-            response.Reason = $"¹æ ÀÎ¿øÀÌ °¡µæ Ã¡½À´Ï´Ù. (ÃÖ´ë {maxParticipants}¸í)";
+            response.Reason = $"ë°© ì¸ì›ì´ ê°€ë“ ì°¼ìŠµë‹ˆë‹¤. (ìµœëŒ€ {maxParticipants}ëª…)";
+            response.Pending = false;
+            return;
+        }
+
+        if (IsNicknameAlreadyApproved(requestedNickname))
+        {
+            response.Approved = false;
+            response.CreatePlayerObject = false;
+            response.Reason = $"ì´ë¯¸ ì‚¬ìš© ì¤‘ì¸ ë‹‰ë„¤ì„ì…ë‹ˆë‹¤. ({requestedNickname})";
             response.Pending = false;
             return;
         }
@@ -207,9 +223,9 @@ public class P2PChatBootstrap : MonoBehaviour
         if (networkManager.IsServer && clientId != NetworkManager.ServerClientId)
         {
             if (approvedNicknames.TryGetValue(clientId, out string nickname))
-                P2PChatUI.Instance.SetStatus($"{nickname} ´ÔÀÌ ÀÔÀåÇß½À´Ï´Ù.");
+                GameStatusMessageRouter.Show($"{nickname} ë‹˜ì´ ì…ì¥í–ˆìŠµë‹ˆë‹¤.");
             else
-                P2PChatUI.Instance.SetStatus("¾Ë ¼ö ¾ø´Â Å¬¶óÀÌ¾ğÆ®°¡ ÀÔÀåÇß½À´Ï´Ù.");
+                GameStatusMessageRouter.Show("ì•Œ ìˆ˜ ì—†ëŠ” í´ë¼ì´ì–¸íŠ¸ê°€ ì…ì¥í–ˆìŠµë‹ˆë‹¤.");
         }
     }
 
@@ -228,20 +244,20 @@ public class P2PChatBootstrap : MonoBehaviour
 
                 string reason = networkManager.DisconnectReason;
                 if (string.IsNullOrWhiteSpace(reason))
-                    P2PChatUI.Instance.SetStatus("ÇØ´ç IP¿¡ ¹æÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+                    GameStatusMessageRouter.Show("í•´ë‹¹ IPì— ë°©ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
                 else
-                    P2PChatUI.Instance.SetStatus(reason);
+                    GameStatusMessageRouter.Show(reason);
 
                 return;
             }
 
-            P2PChatUI.Instance.SetStatus("¼­¹ö¿ÍÀÇ ¿¬°áÀÌ Á¾·áµÇ¾ú½À´Ï´Ù.");
+            GameStatusMessageRouter.Show("í˜¸ìŠ¤íŠ¸ì™€ì˜ ì—°ê²°ì´ ì¢…ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.");
         }
     }
 
     private void HandleTransportFailure()
     {
-        P2PChatUI.Instance.SetStatus("³×Æ®¿öÅ© ¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù.");
+        GameStatusMessageRouter.Show("ë„¤íŠ¸ì›Œí¬ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
     }
 
     private void RestartConnectTimeout()
@@ -271,7 +287,7 @@ public class P2PChatBootstrap : MonoBehaviour
         if (networkManager != null && networkManager.IsListening)
             networkManager.Shutdown();
 
-        P2PChatUI.Instance.SetStatus("ÇØ´ç IP¿¡ ¹æÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+        GameStatusMessageRouter.Show("í•´ë‹¹ IPì— ë°©ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
     }
 
     private void ShutdownIfNeeded()
@@ -288,6 +304,17 @@ public class P2PChatBootstrap : MonoBehaviour
     {
         return IPAddress.TryParse(value, out IPAddress address)
             && address.AddressFamily == AddressFamily.InterNetwork;
+    }
+
+    private bool IsNicknameAlreadyApproved(string requestedNickname)
+    {
+        foreach (string nickname in approvedNicknames.Values)
+        {
+            if (string.Equals(nickname?.Trim(), requestedNickname, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     private string DecodeNickname(byte[] payload)

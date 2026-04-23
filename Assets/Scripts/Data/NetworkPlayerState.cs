@@ -288,9 +288,6 @@ public class NetworkPlayerState : NetworkBehaviour
 
     private void ShowLocalCommandFeedback(string message)
     {
-        if (P2PChatUI.Instance != null)
-            P2PChatUI.Instance.SetStatus(message);
-        else
-            Debug.LogWarning(message);
+        GameStatusMessageRouter.Show(message);
     }
 }

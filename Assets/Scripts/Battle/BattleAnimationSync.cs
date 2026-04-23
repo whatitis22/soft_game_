@@ -70,10 +70,7 @@ public class BattleAnimationSync : NetworkBehaviour
     [ClientRpc]
     private void ShowAnimationCommandDeniedClientRpc(string message, ClientRpcParams clientRpcParams = default)
     {
-        if (P2PChatUI.Instance != null)
-            P2PChatUI.Instance.SetStatus(message);
-        else
-            Debug.LogWarning(message);
+        GameStatusMessageRouter.Show(message);
     }
 
     [Rpc(SendTo.ClientsAndHost)]
@@ -102,7 +99,7 @@ public class BattleAnimationSync : NetworkBehaviour
 
         if (clientId == NetworkManager.ServerClientId)
         {
-            Debug.LogWarning(message);
+            GameStatusMessageRouter.Show(message);
             return;
         }
 

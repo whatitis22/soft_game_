@@ -87,13 +87,13 @@ public class LobbyQuestReadyButton : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(targetSceneName))
         {
-            P2PChatUI.Instance.SetStatus("이동할 씬 이름이 비어 있습니다.");
+            GameStatusMessageRouter.Show("이동할 씬 이름이 비어 있습니다.");
             return;
         }
 
         if (!NetworkManager.Singleton.NetworkConfig.EnableSceneManagement)
         {
-            P2PChatUI.Instance.SetStatus("Network Scene Management가 비활성화되어 있습니다.");
+            GameStatusMessageRouter.Show("Network Scene Management가 비활성화되어 있습니다.");
             return;
         }
 
@@ -106,7 +106,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
         if (!AreAllClientsReady())
         {
-            P2PChatUI.Instance.SetStatus("모든 인원이 준비되지 않았습니다.");
+            GameStatusMessageRouter.Show("모든 인원이 준비되지 않았습니다.");
             return;
         }
 
@@ -119,7 +119,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
         if (status != SceneEventProgressStatus.Started)
         {
-            P2PChatUI.Instance.SetStatus($"씬 이동에 실패했습니다. ({status})");
+            GameStatusMessageRouter.Show($"씬 이동에 실패했습니다. ({status})");
             return;
         }
 

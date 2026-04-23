@@ -21,8 +21,13 @@ public class P2PChatUI : MonoBehaviour
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
     [SerializeField] private Button joinButton;
+    [SerializeField] private Button backToNicknameButton;
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_InputField ipInput;
+
+    [Header("IP 입력 단계")]
+    [SerializeField] private bool autoCreateBackToNicknameButton = true;
+    [SerializeField] private string backToNicknameButtonLabel = "닉네임 수정";
 
     [Header("닉네임 입력")]
     [SerializeField] private TMP_Text nicknameCountText;
@@ -83,11 +88,25 @@ public class P2PChatUI : MonoBehaviour
         Instance = this;
     }
 
+    private void OnEnable()
+    {
+        GameStatusMessageRouter.RegisterReceiver(SetStatus);
+    }
+
+    private void OnDisable()
+    {
+        GameStatusMessageRouter.UnregisterReceiver(SetStatus);
+    }
+
     private void Start()
     {
+        EnsureBackToNicknameButton();
+
         hostButton.onClick.AddListener(OnClickHost);
         clientButton.onClick.AddListener(OnClickClient);
         joinButton.onClick.AddListener(OnClickJoin);
+        if (backToNicknameButton != null)
+            backToNicknameButton.onClick.AddListener(OnClickBackToNickname);
 
         chatToggleButton.onClick.AddListener(ToggleChatPopup);
         chatPopupCloseButton.onClick.AddListener(CloseChatPopup);
@@ -113,7 +132,7 @@ public class P2PChatUI : MonoBehaviour
         RefreshChatCountText();
         RefreshNicknameCountText();
 
-        SetStatus(initialStatusText, false);
+        GameStatusMessageRouter.Show(initialStatusText, false);
     }
 
     private void OnDestroy()
@@ -126,6 +145,9 @@ public class P2PChatUI : MonoBehaviour
 
         if (historyScrollRect != null)
             historyScrollRect.onValueChanged.RemoveListener(OnHistoryScrollValueChanged);
+
+        if (backToNicknameButton != null)
+            backToNicknameButton.onClick.RemoveListener(OnClickBackToNickname);
     }
 
     public void ResetToInitialState()
@@ -136,6 +158,7 @@ public class P2PChatUI : MonoBehaviour
 
         ipInputRoot.SetActive(false);
         joinButtonRoot.SetActive(false);
+        SetBackToNicknameButtonVisible(false);
 
         chatToggleButtonRoot.SetActive(false);
         chatPopupRoot.SetActive(false);
@@ -176,7 +199,7 @@ public class P2PChatUI : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(nickname))
         {
-            SetStatus("닉네임은 공백만 입력할 수 없습니다.");
+            GameStatusMessageRouter.Show("닉네임은 공백만 입력할 수 없습니다.");
             return false;
         }
 
@@ -185,6 +208,7 @@ public class P2PChatUI : MonoBehaviour
 
     public void EnterRoomAsHost()
     {
+        SetBackToNicknameButtonVisible(false);
         chatToggleButtonRoot.SetActive(true);
         lobbyThingsRoot.SetActive(true);
         chatPopupRoot.SetActive(false);
@@ -194,6 +218,7 @@ public class P2PChatUI : MonoBehaviour
     {
         ipInputRoot.SetActive(false);
         joinButtonRoot.SetActive(false);
+        SetBackToNicknameButtonVisible(false);
 
         chatToggleButtonRoot.SetActive(true);
         lobbyThingsRoot.SetActive(true);
@@ -247,9 +272,10 @@ public class P2PChatUI : MonoBehaviour
         HideFirstStepUI();
         ipInputRoot.SetActive(true);
         joinButtonRoot.SetActive(true);
+        SetBackToNicknameButtonVisible(true);
 
         P2PChatBootstrap.Instance.PrepareClient(nickname);
-        SetStatus("접속할 IPv4를 입력한 뒤 입장 버튼을 누르세요.");
+        GameStatusMessageRouter.Show("접속할 IPv4를 입력한 뒤 입장 버튼을 누르세요.");
     }
 
     private void OnClickJoin()
@@ -263,6 +289,59 @@ public class P2PChatUI : MonoBehaviour
         }
 
         P2PChatBootstrap.Instance.StartClient(ip);
+    }
+
+    private void OnClickBackToNickname()
+    {
+        if (P2PChatBootstrap.Instance != null)
+            P2PChatBootstrap.Instance.CancelClientJoinPreparation();
+
+        hostButtonRoot.SetActive(true);
+        clientButtonRoot.SetActive(true);
+        nicknameInputRoot.SetActive(true);
+
+        ipInputRoot.SetActive(false);
+        joinButtonRoot.SetActive(false);
+        SetBackToNicknameButtonVisible(false);
+
+        if (nicknameInput != null)
+            nicknameInput.ActivateInputField();
+
+        GameStatusMessageRouter.Show(initialStatusText, false);
+    }
+
+    private void EnsureBackToNicknameButton()
+    {
+        if (backToNicknameButton != null || !autoCreateBackToNicknameButton || joinButton == null)
+            return;
+
+        Button createdButton = Instantiate(joinButton, joinButton.transform.parent);
+        createdButton.name = "Back To Nickname Button";
+        createdButton.onClick.RemoveAllListeners();
+
+        TMP_Text label = createdButton.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+            label.text = backToNicknameButtonLabel;
+
+        RectTransform createdRect = createdButton.transform as RectTransform;
+        RectTransform joinRect = joinButton.transform as RectTransform;
+        if (createdRect != null && joinRect != null)
+        {
+            float verticalOffset = joinRect.rect.height + 12f;
+            if (verticalOffset <= 12f)
+                verticalOffset = 60f;
+
+            createdRect.anchoredPosition = joinRect.anchoredPosition + new Vector2(0f, -verticalOffset);
+        }
+
+        backToNicknameButton = createdButton;
+        SetBackToNicknameButtonVisible(false);
+    }
+
+    private void SetBackToNicknameButtonVisible(bool visible)
+    {
+        if (backToNicknameButton != null)
+            backToNicknameButton.gameObject.SetActive(visible);
     }
 
     private void ToggleChatPopup()
