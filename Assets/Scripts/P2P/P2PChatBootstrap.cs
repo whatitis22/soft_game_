@@ -38,6 +38,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        // NetworkManager와 Transport 설정은 방 생성/입장 전 한 번만 잡는다.
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -72,6 +73,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
     public void PrepareClient(string nickname)
     {
+        // 클라이언트가 IP 입력 단계로 넘어가기 전에 접속 페이로드로 보낼 닉네임을 보관한다.
         localNickname = nickname.Trim();
         clientJoinPending = false;
         clientJoinConfirmed = false;
@@ -80,12 +82,14 @@ public class P2PChatBootstrap : MonoBehaviour
 
     public void CancelClientJoinPreparation()
     {
+        // IP 입력 단계에서 닉네임 수정으로 돌아갈 때 대기 중인 접속 시도를 정리한다.
         ShutdownIfNeeded();
         localNickname = string.Empty;
     }
 
     public bool StartHost(string nickname)
     {
+        // Host는 자기 자신이 서버 역할도 하므로 기존 네트워크 세션을 먼저 정리한다.
         ShutdownIfNeeded();
 
         localNickname = nickname.Trim();
@@ -107,6 +111,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
         if (NetworkSessionState.Instance != null)
         {
+            // 세션 상태에 Host 정보를 저장해 다른 권한 검사들이 같은 기준을 쓰게 한다.
             NetworkSessionState.Instance.ServerSetHostInfo(
                 NetworkManager.ServerClientId,
                 localNickname
@@ -123,6 +128,7 @@ public class P2PChatBootstrap : MonoBehaviour
     {
         string trimmedIp = string.IsNullOrWhiteSpace(ip) ? "127.0.0.1" : ip.Trim();
 
+        // 현재 UI는 IPv4 직접 입력만 지원하므로 접속 전에 형식을 걸러낸다.
         if (!IsValidIpv4(trimmedIp))
         {
             GameStatusMessageRouter.Show("유효하지 않은 IPv4 주소입니다.");
@@ -135,6 +141,7 @@ public class P2PChatBootstrap : MonoBehaviour
         clientJoinConfirmed = false;
 
         transport.SetConnectionData(trimmedIp, port);
+        // ConnectionApproval에서 닉네임 중복/공백 여부를 판정할 수 있게 페이로드로 보낸다.
         networkManager.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(localNickname);
 
         bool started = networkManager.StartClient();
@@ -154,6 +161,7 @@ public class P2PChatBootstrap : MonoBehaviour
         if (clientJoinConfirmed)
             return;
 
+        // HostNickname 동기화가 도착한 시점을 클라이언트 입장 확정 시점으로 본다.
         clientJoinPending = false;
         clientJoinConfirmed = true;
         hostNickname = connectedHostNickname;
@@ -182,6 +190,7 @@ public class P2PChatBootstrap : MonoBehaviour
     private void ApprovalCheck(NetworkManager.ConnectionApprovalRequest request,
                                NetworkManager.ConnectionApprovalResponse response)
     {
+        // 승인 콜백은 Host 쪽에서 실행되며, 여기서 참가 가능 여부를 최종 결정한다.
         string requestedNickname = DecodeNickname(request.Payload);
 
         if (string.IsNullOrWhiteSpace(requestedNickname))
@@ -204,6 +213,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
         if (IsNicknameAlreadyApproved(requestedNickname))
         {
+            // 같은 방 안에서는 닉네임을 고유하게 유지해 채팅/플레이어 표시가 헷갈리지 않게 한다.
             response.Approved = false;
             response.CreatePlayerObject = false;
             response.Reason = $"이미 사용 중인 닉네임입니다. ({requestedNickname})";
@@ -234,6 +244,7 @@ public class P2PChatBootstrap : MonoBehaviour
         if (networkManager.IsServer)
             approvedNicknames.Remove(clientId);
 
+        // 입장 확정 전 끊긴 경우는 승인 실패/접속 실패 메시지로 처리한다.
         if (!networkManager.IsServer && clientId == networkManager.LocalClientId)
         {
             StopConnectTimeout();
@@ -277,6 +288,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
     private IEnumerator CoConnectTimeout()
     {
+        // Transport 연결 실패가 명확히 오지 않는 경우를 대비한 사용자용 타임아웃이다.
         yield return new WaitForSeconds(connectTimeoutSeconds);
 
         if (!clientJoinPending || clientJoinConfirmed)
@@ -308,6 +320,7 @@ public class P2PChatBootstrap : MonoBehaviour
 
     private bool IsNicknameAlreadyApproved(string requestedNickname)
     {
+        // 대소문자 차이만 있는 닉네임도 같은 이름으로 본다.
         foreach (string nickname in approvedNicknames.Values)
         {
             if (string.Equals(nickname?.Trim(), requestedNickname, StringComparison.OrdinalIgnoreCase))

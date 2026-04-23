@@ -17,6 +17,7 @@ public static class GameStatusMessageRouter
         if (receiver == null)
             return;
 
+        // 씬 UI가 살아 있으면 전역 오버레이 대신 해당 UI가 메시지를 받는다.
         Receivers += receiver;
         receiverCount++;
     }
@@ -26,12 +27,14 @@ public static class GameStatusMessageRouter
         if (receiver == null)
             return;
 
+        // 수신자가 모두 사라지면 이후 메시지는 fallback overlay로 표시된다.
         Receivers -= receiver;
         receiverCount = Mathf.Max(0, receiverCount - 1);
     }
 
     public static void Show(string message, bool autoClear = true)
     {
+        // 현재 씬에 상태 UI가 있으면 그쪽으로 보내고, 없으면 런타임 오버레이를 사용한다.
         if (receiverCount > 0)
         {
             Receivers?.Invoke(message ?? string.Empty, autoClear);
@@ -46,6 +49,7 @@ public static class GameStatusMessageRouter
         if (fallbackOverlay != null)
             return fallbackOverlay;
 
+        // 전투 씬처럼 P2PChatUI가 없는 경우에도 실패 사유를 볼 수 있게 만든다.
         GameObject root = new GameObject("Game Status Message Router");
         UnityEngine.Object.DontDestroyOnLoad(root);
 
@@ -70,6 +74,7 @@ public static class GameStatusMessageRouter
             if (messageText == null)
                 BuildOverlay();
 
+            // 빈 메시지는 화면을 숨기는 신호로 사용한다.
             messageText.text = message ?? string.Empty;
             SetVisible(!string.IsNullOrEmpty(message));
 
@@ -85,6 +90,7 @@ public static class GameStatusMessageRouter
 
         private IEnumerator CoClearAfterDelay()
         {
+            // Time.timeScale이 멈춰도 안내 메시지는 사라져야 하므로 realtime을 쓴다.
             yield return new WaitForSecondsRealtime(DefaultAutoClearDelay);
             Show(string.Empty, false);
         }
@@ -94,6 +100,7 @@ public static class GameStatusMessageRouter
             if (messageText != null)
                 return;
 
+            // 별도 프리팹 없이도 모든 씬에서 최소한의 상태 표시가 가능하도록 UI를 런타임 생성한다.
             Canvas canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = short.MaxValue;

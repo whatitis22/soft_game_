@@ -12,6 +12,7 @@ public static class NetworkPlayerRegistry
         if (player == null)
             return;
 
+        // 씬 검색 대신 현재 스폰된 플레이어 목록을 한 곳에서 관리한다.
         Compact();
 
         if (players.Contains(player))
@@ -26,6 +27,7 @@ public static class NetworkPlayerRegistry
         if (player == null)
             return;
 
+        // 디스폰/파괴된 플레이어는 즉시 목록에서 빠져야 UI가 낡은 상태를 보지 않는다.
         if (players.Remove(player))
             PlayersChanged?.Invoke();
     }
@@ -49,6 +51,7 @@ public static class NetworkPlayerRegistry
         if (target == null)
             return;
 
+        // 호출자가 재사용 가능한 리스트를 넘기면 할당을 줄일 수 있게 한다.
         target.Clear();
         Compact();
 
@@ -64,6 +67,7 @@ public static class NetworkPlayerRegistry
     {
         player = null;
 
+        // 로컬 클라이언트 ID 기준으로 자기 PlayerObject를 찾는다.
         if (NetworkManager.Singleton == null)
             return false;
 
@@ -116,6 +120,7 @@ public static class NetworkPlayerRegistry
 
     private static void Compact()
     {
+        // Unity 오브젝트 파괴 후 남는 null 참조를 접근 전에 정리한다.
         for (int i = players.Count - 1; i >= 0; i--)
         {
             if (players[i] == null)
@@ -130,6 +135,7 @@ public static class NetworkPlayerRegistry
 
     private static int CompareByPlayerIndex(NetworkPlayerState a, NetworkPlayerState b)
     {
+        // 표시 순서는 PlayerIndex가 우선이고, 동률이면 OwnerClientId로 안정성을 준다.
         int result = a.PlayerIndex.Value.CompareTo(b.PlayerIndex.Value);
         if (result != 0)
             return result;

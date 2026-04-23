@@ -37,6 +37,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             return;
 
+        // Host는 씬 이동을 시도하고, 클라이언트는 자기 준비 상태만 토글한다.
         NetworkPlayerState localPlayer = FindLocalPlayer();
         if (localPlayer == null)
             return;
@@ -85,6 +86,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
     private void TryHostMoveScene()
     {
+        // 방장은 씬 이동 전에 대상 씬과 Network Scene Management 설정을 확인한다.
         if (string.IsNullOrWhiteSpace(targetSceneName))
         {
             GameStatusMessageRouter.Show("이동할 씬 이름이 비어 있습니다.");
@@ -132,6 +134,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
         if (NetworkSessionState.Instance != null)
             hostClientId = NetworkSessionState.Instance.HostClientId.Value;
 
+        // Host는 준비 대상에서 제외하고, 참가 클라이언트가 모두 준비됐는지 확인한다.
         bool foundAnyClient = false;
 
         foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
@@ -167,6 +170,7 @@ public class LobbyQuestReadyButton : MonoBehaviour
         if (cachedLocalPlayer != null && cachedLocalPlayer.IsSpawned && cachedLocalPlayer.IsOwner)
             return cachedLocalPlayer;
 
+        // 로컬 플레이어는 레지스트리에서 찾고, 반복 호출 비용을 줄이기 위해 캐싱한다.
         if (NetworkPlayerRegistry.TryGetLocalPlayer(out NetworkPlayerState player))
         {
             cachedLocalPlayer = player;

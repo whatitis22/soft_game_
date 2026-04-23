@@ -43,6 +43,7 @@ public class BattlePlayerSlots : MonoBehaviour
     {
         float elapsed = 0f;
 
+        // 씬 전환 직후 NetworkPlayerState 동기화가 늦을 수 있어 잠시 기다린다.
         while (elapsed < waitTimeout)
         {
             List<NetworkPlayerState> players = NetworkPlayerRegistry.GetSpawnedPlayers();
@@ -90,11 +91,13 @@ public class BattlePlayerSlots : MonoBehaviour
 
     public void RespawnNow()
     {
+        // 에디터 버튼이나 테스트 코드에서 현재 레지스트리 상태로 즉시 다시 생성할 때 사용한다.
         SpawnFromPlayers(NetworkPlayerRegistry.GetSpawnedPlayers());
     }
 
     public void SpawnFromPlayers(IReadOnlyList<NetworkPlayerState> players)
     {
+        // 다시 생성하기 전에 이전 스탠딩과 NetworkVariable 구독을 모두 정리한다.
         UnsubscribeAllPlayerStateEvents();
         ClearAll();
 
@@ -140,6 +143,7 @@ public class BattlePlayerSlots : MonoBehaviour
         if (player == null)
             return;
 
+        // PlayerIndex와 Job을 기준으로 어느 슬롯에 어떤 전투 스탠딩을 세울지 결정한다.
         int playerIndex = player.PlayerIndex.Value;
         JobType jobType = player.Job.Value;
 
@@ -234,6 +238,7 @@ public class BattlePlayerSlots : MonoBehaviour
         if (player == null)
             return;
 
+        // SubmittedCard가 바뀌면 해당 플레이어 스탠딩의 카드 표시만 갱신한다.
         if (submittedCardHandlers.ContainsKey(player))
             return;
 
@@ -248,6 +253,7 @@ public class BattlePlayerSlots : MonoBehaviour
 
     private void UnsubscribeAllPlayerStateEvents()
     {
+        // Destroy된 스탠딩이 NetworkVariable 이벤트를 계속 받지 않도록 구독을 해제한다.
         foreach (var pair in submittedCardHandlers)
         {
             if (pair.Key == null)
@@ -264,6 +270,7 @@ public class BattlePlayerSlots : MonoBehaviour
         if (player == null)
             return;
 
+        // 자기 카드는 숫자를 보여주고, 다른 플레이어 카드는 BattlePlayerStanding에서 뒷면으로 처리한다.
         int playerIndex = player.PlayerIndex.Value;
         int submittedCard = player.SubmittedCard.Value;
 

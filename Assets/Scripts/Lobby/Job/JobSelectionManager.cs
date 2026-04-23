@@ -31,6 +31,7 @@ public class JobSelectionManager : MonoBehaviour
 
     public JobType GetFirstAvailableJob()
     {
+        // 자동 배정은 고정 우선순위를 따라 아직 비어 있는 직업을 찾는다.
         foreach (JobType job in AutoAssignPriority)
         {
             if (!IsJobTaken(job))
@@ -45,6 +46,7 @@ public class JobSelectionManager : MonoBehaviour
         if (targetJob == JobType.None)
             return false;
 
+        // 현재 스폰된 플레이어 상태를 기준으로 직업 점유 여부를 판단한다.
         foreach (NetworkPlayerState player in NetworkPlayerRegistry.GetSpawnedPlayers())
         {
             if (player.OwnerClientId == ignoreOwnerClientId)
@@ -73,6 +75,7 @@ public class JobSelectionManager : MonoBehaviour
 
     public bool ServerTryAssignJob(NetworkPlayerState player, JobType targetJob, out string failureReason)
     {
+        // 직업 변경은 서버가 최종 확정하고, 실패 시 요청자에게 보여줄 이유를 함께 돌려준다.
         if (player == null || !player.IsServer)
         {
             failureReason = "직업 변경은 호스트가 확정해야 합니다.";

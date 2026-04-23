@@ -36,6 +36,7 @@ public class P2PChatSession : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // 세션의 NetworkList 변경을 구독해 채팅 UI를 이벤트 기반으로 갱신한다.
         if (Session != null)
         {
             Session.ChatHistory.OnListChanged += OnHistoryChanged;
@@ -68,6 +69,7 @@ public class P2PChatSession : NetworkBehaviour
         if (!IsSpawned || Session == null)
             return false;
 
+        // 클라이언트는 요청만 보내고, 실제 히스토리 추가는 Host/서버에서 확정한다.
         string trimmed = (rawText ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
             return false;
@@ -87,6 +89,7 @@ public class P2PChatSession : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(trimmed) || Session == null)
             return;
 
+        // 나레이션은 호스트 소유 명령이라 원격 클라이언트 요청은 서버에서 다시 검사된다.
         if (NetworkCommandAuthority.CanLocalServerRunCommand(this))
             Session.ServerAddNarration(trimmed);
         else
@@ -107,6 +110,7 @@ public class P2PChatSession : NetworkBehaviour
     [Rpc(SendTo.Server)]
     private void SubmitChatRpc(string message, RpcParams rpcParams = default)
     {
+        // SenderClientId는 클라이언트가 속일 수 없는 Netcode 수신 메타데이터다.
         ulong senderId = rpcParams.Receive.SenderClientId;
         TryAcceptChatOnServer(senderId, message);
     }
@@ -146,6 +150,7 @@ public class P2PChatSession : NetworkBehaviour
         if (Session == null)
             return false;
 
+        // 간단한 초당 메시지 제한으로 채팅 도배를 서버 쪽에서 막는다.
         float now = Time.unscaledTime;
 
         if (mutedUntilTimes.TryGetValue(senderId, out float mutedUntil) && now < mutedUntil)
@@ -177,6 +182,7 @@ public class P2PChatSession : NetworkBehaviour
         if (P2PChatBootstrap.Instance != null &&
             P2PChatBootstrap.Instance.TryGetNickname(senderId, out string approvedNickname))
         {
+            // 승인된 닉네임만 채팅 발신자로 사용해 클라이언트 임의 표시명을 막는다.
             senderNickname = approvedNickname;
         }
 
@@ -193,6 +199,7 @@ public class P2PChatSession : NetworkBehaviour
         if (NetworkManager == null)
             return;
 
+        // 실패 사유는 전체 브로드캐스트하지 않고 요청한 클라이언트에게만 보낸다.
         if (clientId == NetworkManager.ServerClientId)
         {
             GameStatusMessageRouter.Show(message);
@@ -212,6 +219,7 @@ public class P2PChatSession : NetworkBehaviour
 
     private bool TryAuthorizeHostOwnedCommand(ulong senderId, string commandName)
     {
+        // 시스템 채팅 명령은 Host만 사용할 수 있도록 공통 권한 헬퍼를 거친다.
         if (NetworkCommandAuthority.CanRunHostOwnedCommand(senderId))
             return true;
 
@@ -246,6 +254,7 @@ public class P2PChatSession : NetworkBehaviour
         if (P2PChatUI.Instance == null || Session == null)
             return;
 
+        // UI가 전체 재생성 대신 Add/Remove 이벤트를 증분 처리하도록 변경 이벤트를 그대로 넘긴다.
         P2PChatUI.Instance.ApplyHistoryChange(Session.ChatHistory, changeEvent);
     }
 
@@ -260,6 +269,7 @@ public class P2PChatSession : NetworkBehaviour
         if (!IsClient || IsServer || clientRoomJoinMessageShown || Session == null)
             return;
 
+        // HostNickname이 도착하면 승인된 방에 정상 입장한 것으로 보고 초기 UI를 전환한다.
         string nick = Session.HostNickname.Value.ToString();
         if (string.IsNullOrWhiteSpace(nick))
             return;

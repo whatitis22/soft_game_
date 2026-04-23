@@ -90,6 +90,7 @@ public class P2PChatUI : MonoBehaviour
 
     private void OnEnable()
     {
+        // 로비 UI가 살아 있는 동안에는 전역 메시지를 이 상태 텍스트로 받는다.
         GameStatusMessageRouter.RegisterReceiver(SetStatus);
     }
 
@@ -100,6 +101,7 @@ public class P2PChatUI : MonoBehaviour
 
     private void Start()
     {
+        // 별도 버튼을 씬에 배치하지 않아도 닉네임 수정 버튼을 사용할 수 있게 준비한다.
         EnsureBackToNicknameButton();
 
         hostButton.onClick.AddListener(OnClickHost);
@@ -152,6 +154,7 @@ public class P2PChatUI : MonoBehaviour
 
     public void ResetToInitialState()
     {
+        // 닉네임 입력부터 다시 시작하는 첫 화면 상태로 되돌린다.
         hostButtonRoot.SetActive(true);
         clientButtonRoot.SetActive(true);
         nicknameInputRoot.SetActive(true);
@@ -230,6 +233,7 @@ public class P2PChatUI : MonoBehaviour
         if (statusText == null)
             return;
 
+        // GameStatusMessageRouter의 기본 수신자로 사용되며, autoClear가 꺼지면 안내문을 유지한다.
         statusText.text = message ?? string.Empty;
 
         if (statusClearCoroutine != null)
@@ -269,6 +273,7 @@ public class P2PChatUI : MonoBehaviour
         if (!TryGetValidNickname(out string nickname))
             return;
 
+        // 클라이언트는 닉네임을 먼저 확정한 뒤 IP 입력 단계로 넘어간다.
         HideFirstStepUI();
         ipInputRoot.SetActive(true);
         joinButtonRoot.SetActive(true);
@@ -293,6 +298,7 @@ public class P2PChatUI : MonoBehaviour
 
     private void OnClickBackToNickname()
     {
+        // 접속 시도 전 단계로 되돌아가 닉네임을 다시 수정할 수 있게 한다.
         if (P2PChatBootstrap.Instance != null)
             P2PChatBootstrap.Instance.CancelClientJoinPreparation();
 
@@ -315,6 +321,7 @@ public class P2PChatUI : MonoBehaviour
         if (backToNicknameButton != null || !autoCreateBackToNicknameButton || joinButton == null)
             return;
 
+        // 기존 Join Button의 스타일을 복제해 씬 수정 없이 되돌아가기 버튼을 제공한다.
         Button createdButton = Instantiate(joinButton, joinButton.transform.parent);
         createdButton.name = "Back To Nickname Button";
         createdButton.onClick.RemoveAllListeners();
@@ -394,6 +401,7 @@ public class P2PChatUI : MonoBehaviour
     {
         if (entries == null)
         {
+            // 세션이 사라진 경우 화면도 빈 히스토리 상태로 맞춘다.
             boundHistory = null;
             ClearRenderedHistory();
             RefreshHistoryPagingState();
@@ -409,6 +417,7 @@ public class P2PChatUI : MonoBehaviour
         switch (changeEvent.Type)
         {
             case NetworkListEvent<P2PChatEntry>.EventType.Add:
+                // 일반적인 새 메시지는 블록 하나만 추가해 전체 재생성을 피한다.
                 ApplyHistoryAdd(entries, changeEvent);
                 break;
 
@@ -441,6 +450,7 @@ public class P2PChatUI : MonoBehaviour
         if (boundHistory == null || historyContent == null)
             return;
 
+        // 최신 30개에서 시작해 위로 스크롤할 때 이전 30개를 앞쪽에 붙인다.
         int newStartIndex = Mathf.Max(0, displayedHistoryStartIndex - HistoryPageSize);
         int prependCount = displayedHistoryStartIndex - newStartIndex;
         if (prependCount <= 0)
@@ -464,6 +474,7 @@ public class P2PChatUI : MonoBehaviour
 
     private void RebuildLatestHistoryPage()
     {
+        // 최초 입장/전체 갱신 시에는 최신 페이지 하나만 렌더링한다.
         ClearRenderedHistory();
 
         if (boundHistory == null || historyContent == null)
@@ -493,6 +504,7 @@ public class P2PChatUI : MonoBehaviour
         if (historyContent == null)
             return;
 
+        // 사용자가 최신 페이지를 보고 있을 때만 30개 창을 유지하며 맨 앞 항목을 밀어낸다.
         int previousCount = Mathf.Max(0, entries.Count - 1);
         bool wasSingleLatestPage =
             displayedHistoryCount <= HistoryPageSize &&
@@ -532,6 +544,7 @@ public class P2PChatUI : MonoBehaviour
     {
         if (entries.Count == 0)
         {
+            // 서버 히스토리가 비면 표시 중인 블록도 모두 지운다.
             ClearRenderedHistory();
             displayedHistoryStartIndex = 0;
             displayedHistoryCount = 0;
@@ -586,6 +599,7 @@ public class P2PChatUI : MonoBehaviour
 
     private GameObject CreateHistoryBlock(P2PChatEntry entry, Transform parent)
     {
+        // 데이터 타입에 맞는 프리팹을 생성해 채팅 히스토리 UI 블록으로 변환한다.
         switch (entry.EntryType)
         {
             case P2PChatEntryType.Normal:
@@ -677,6 +691,7 @@ public class P2PChatUI : MonoBehaviour
         if (historyScrollRect == null || chatPopupRoot == null || !chatPopupRoot.activeSelf)
             return true;
 
+        // 사용자가 과거 메시지를 보고 있으면 새 메시지가 와도 스크롤 위치를 덜 흔든다.
         return historyScrollRect.verticalNormalizedPosition <= 0.05f;
     }
 
@@ -685,6 +700,7 @@ public class P2PChatUI : MonoBehaviour
         if (suppressHistoryScrollEvent || !loadOlderOnScrollTop)
             return;
 
+        // ScrollRect 최상단 근처에 도달하면 이전 페이지를 자동 로드한다.
         if (boundHistory == null || displayedHistoryStartIndex <= 0)
             return;
 

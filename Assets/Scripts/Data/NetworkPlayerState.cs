@@ -55,6 +55,7 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // 스폰된 PlayerObject만 레지스트리에 올려 UI/전투 시스템이 공통 목록을 읽게 한다.
         NetworkPlayerRegistry.Register(this);
 
         if (IsOwner)
@@ -65,6 +66,7 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        // 씬 전환이나 연결 종료 때 낡은 플레이어 상태가 남지 않게 제거한다.
         NetworkPlayerRegistry.Unregister(this);
     }
 
@@ -73,6 +75,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        // 접속 승인 후 서버가 플레이어의 초기 공개/비공개 상태를 확정한다.
         PlayerIndex.Value = playerIndex;
         DisplayNickname.Value = new FixedString64Bytes(nickname ?? string.Empty);
         Job.Value = initialJob;
@@ -137,6 +140,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (cardValue < 1 || cardValue > 6)
             return false;
 
+        // 1~6 카드 보유 여부는 RemainingNumberCardsMask의 각 비트로 표현한다.
         byte mask = (byte)(1 << (cardValue - 1));
         return (RemainingNumberCardsMask.Value & mask) != 0;
     }
@@ -146,6 +150,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer || cardValue < 1 || cardValue > 6)
             return;
 
+        // 서버에서만 카드를 소모해야 클라이언트별 보유 카드가 갈라지지 않는다.
         byte mask = (byte)(1 << (cardValue - 1));
         byte current = RemainingNumberCardsMask.Value;
 
@@ -177,6 +182,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        // 클라이언트 요청은 전부 서버에서 다시 검증하고 실패 사유를 요청자에게 돌려준다.
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
         {
@@ -217,6 +223,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        // 직업 중복 여부는 서버의 현재 플레이어 목록을 기준으로 최종 판정한다.
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
         {
@@ -240,6 +247,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        // 준비 상태도 자기 PlayerObject에 대해서만 변경 요청을 허용한다.
         ulong senderId = rpcParams.Receive.SenderClientId;
         if (senderId != OwnerClientId)
         {
@@ -269,6 +277,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(message) || NetworkManager == null)
             return;
 
+        // Host 본인의 실패는 로컬 처리하고, 원격 클라이언트는 대상 지정 ClientRpc로 보낸다.
         if (clientId == NetworkManager.ServerClientId)
         {
             ShowLocalCommandFeedback(message);

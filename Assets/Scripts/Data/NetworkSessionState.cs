@@ -54,6 +54,7 @@ public class NetworkSessionState : NetworkBehaviour
 
     private void Awake()
     {
+        // 세션 상태는 씬을 넘어 유지되는 단일 네트워크 상태 컨테이너다.
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -96,6 +97,7 @@ public class NetworkSessionState : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // Host가 세션을 처음 열 때 방장 정보를 서버 기준값으로 초기화한다.
         if (IsServer && HostClientId.Value == ulong.MaxValue)
             HostClientId.Value = NetworkManager.ServerClientId;
     }
@@ -112,6 +114,7 @@ public class NetworkSessionState : NetworkBehaviour
     {
         if (!IsServer || string.IsNullOrWhiteSpace(message)) return;
 
+        // 나레이션은 일반 채팅과 구분되는 시스템 메시지로 히스토리에 저장한다.
         ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Narration,
             ulong.MaxValue,
@@ -124,6 +127,7 @@ public class NetworkSessionState : NetworkBehaviour
     {
         if (!IsServer) return;
 
+        // 구분선도 채팅 히스토리 이벤트로 동기화해 모든 클라이언트 UI가 같은 순서를 본다.
         ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Divider,
             ulong.MaxValue,
@@ -138,6 +142,7 @@ public class NetworkSessionState : NetworkBehaviour
         if (string.IsNullOrWhiteSpace(nickname)) return;
         if (string.IsNullOrWhiteSpace(message)) return;
 
+        // 실제 히스토리 변경은 서버만 수행해서 모든 클라이언트의 채팅 순서를 맞춘다.
         ServerAppendChatHistory(new P2PChatEntry(
             P2PChatEntryType.Normal,
             senderClientId,
@@ -151,6 +156,7 @@ public class NetworkSessionState : NetworkBehaviour
         if (!IsServer || ChatHistory == null)
             return;
 
+        // NetworkList가 무한히 커지지 않도록 오래된 메시지부터 밀어낸다.
         while (ChatHistory.Count >= MaxChatHistoryEntries && ChatHistory.Count > 0)
             ChatHistory.RemoveAt(0);
 
