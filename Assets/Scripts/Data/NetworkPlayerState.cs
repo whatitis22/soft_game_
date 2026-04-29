@@ -183,6 +183,7 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        NetworkSessionState.Instance?.ServerResetRoundLock();
         SubmittedCard.Value = -1;
     }
 
@@ -191,10 +192,14 @@ public class NetworkPlayerState : NetworkBehaviour
         if (!IsServer)
             return;
 
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+            return;
+
         int submittedCard = SubmittedCard.Value;
         if (submittedCard >= 1 && submittedCard <= 6)
             ServerReturnNumberCard(submittedCard);
 
+        NetworkSessionState.Instance?.ServerResetRoundLock();
         SubmittedCard.Value = -1;
     }
 
@@ -209,6 +214,12 @@ public class NetworkPlayerState : NetworkBehaviour
         if (senderId != OwnerClientId)
         {
             SendCommandFeedback(senderId, "자신의 카드만 제출할 수 있습니다.");
+            return;
+        }
+
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+        {
+            SendCommandFeedback(senderId, "라운드가 잠겨 카드 제출을 변경할 수 없습니다.");
             return;
         }
 
@@ -250,6 +261,12 @@ public class NetworkPlayerState : NetworkBehaviour
         if (senderId != OwnerClientId)
         {
             SendCommandFeedback(senderId, "자신의 카드 제출만 취소할 수 있습니다.");
+            return;
+        }
+
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+        {
+            SendCommandFeedback(senderId, "라운드가 잠겨 카드 제출을 변경할 수 없습니다.");
             return;
         }
 

@@ -39,10 +39,17 @@ public class NetworkSessionState : NetworkBehaviour
     public NetworkVariable<int> CurrentStage =
         new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<bool> IsRoundLocked =
+        new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<float> RandomEventChance =
         new(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkList<P2PChatEntry> ChatHistory;
+
+    [Header("전투 라운드 잠금")]
+    [SerializeField] private bool monitorRoundLock = true;
+    [SerializeField, Min(0f)] private float roundLockHoldSeconds = 1.5f;
 
     [Header("채팅 히스토리")]
     [SerializeField, Min(1)] private int maxChatHistoryEntries = 300;
@@ -51,6 +58,12 @@ public class NetworkSessionState : NetworkBehaviour
     [SerializeField] private bool makeDontDestroyOnLoad = true;
 
     public int MaxChatHistoryEntries => Mathf.Max(1, maxChatHistoryEntries);
+    public float RoundLockHoldSeconds => Mathf.Max(0f, roundLockHoldSeconds);
+
+    private readonly System.Collections.Generic.List<NetworkPlayerState> roundLockPlayers =
+        new System.Collections.Generic.List<NetworkPlayerState>();
+
+    private float allCardsSubmittedHeldSeconds;
 
     private void Awake()
     {
@@ -82,6 +95,15 @@ public class NetworkSessionState : NetworkBehaviour
     private void OnValidate()
     {
         maxChatHistoryEntries = Mathf.Max(1, maxChatHistoryEntries);
+        roundLockHoldSeconds = Mathf.Max(0f, roundLockHoldSeconds);
+    }
+
+    private void Update()
+    {
+        if (!IsServer || !monitorRoundLock || IsRoundLocked.Value)
+            return;
+
+        UpdateRoundLockMonitor();
     }
 
     public override void OnDestroy()
@@ -100,6 +122,29 @@ public class NetworkSessionState : NetworkBehaviour
         // Host가 세션을 처음 열 때 방장 정보를 서버 기준값으로 초기화한다.
         if (IsServer && HostClientId.Value == ulong.MaxValue)
             HostClientId.Value = NetworkManager.ServerClientId;
+    }
+
+    public void ServerSetRoundLocked(bool locked)
+    {
+        if (!IsServer)
+            return;
+
+        if (IsRoundLocked.Value == locked)
+            return;
+
+        IsRoundLocked.Value = locked;
+
+        if (locked)
+            Debug.Log("[NetworkSessionState] 모든 플레이어가 카드를 제출해 라운드가 잠겼습니다.");
+    }
+
+    public void ServerResetRoundLock()
+    {
+        if (!IsServer)
+            return;
+
+        allCardsSubmittedHeldSeconds = 0f;
+        ServerSetRoundLocked(false);
     }
 
     public void ServerSetHostInfo(ulong hostClientId, string hostNickname)
@@ -161,5 +206,51 @@ public class NetworkSessionState : NetworkBehaviour
             ChatHistory.RemoveAt(0);
 
         ChatHistory.Add(entry);
+    }
+
+    private void UpdateRoundLockMonitor()
+    {
+        if (AreAllRoundPlayersSubmitted())
+        {
+            allCardsSubmittedHeldSeconds += Time.unscaledDeltaTime;
+
+            if (allCardsSubmittedHeldSeconds >= RoundLockHoldSeconds)
+                ServerSetRoundLocked(true);
+
+            return;
+        }
+
+        allCardsSubmittedHeldSeconds = 0f;
+    }
+
+    private bool AreAllRoundPlayersSubmitted()
+    {
+        NetworkPlayerRegistry.FillSpawnedPlayers(roundLockPlayers);
+
+        int roundPlayerCount = 0;
+        for (int i = 0; i < roundLockPlayers.Count; i++)
+        {
+            NetworkPlayerState player = roundLockPlayers[i];
+            if (!IsRoundPlayer(player))
+                continue;
+
+            roundPlayerCount++;
+
+            if (player.SubmittedCard.Value < 1 || player.SubmittedCard.Value > 6)
+                return false;
+        }
+
+        return roundPlayerCount > 0;
+    }
+
+    private bool IsRoundPlayer(NetworkPlayerState player)
+    {
+        if (player == null || !player.IsSpawned)
+            return false;
+
+        if (player.PlayerIndex.Value < 0)
+            return false;
+
+        return player.Job.Value != JobType.None;
     }
 }

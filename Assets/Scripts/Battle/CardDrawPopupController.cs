@@ -42,6 +42,7 @@ public class CardDrawPopupController : MonoBehaviour
     private int temporarySelectedNumber = -1;
     private int locallyCanceledSubmittedCard = -1;
     private bool dragLockedBySubmittedCard;
+    private CardPopupRightClickCloser rightClickCloser;
 
     public bool IsOpen => popupRoot != null && popupRoot.activeSelf;
     public bool HasTemporarySelection => temporarySelectedNumber >= 1 && temporarySelectedNumber <= 6;
@@ -56,6 +57,7 @@ public class CardDrawPopupController : MonoBehaviour
         BindCards();
         EnsureRefreshButton();
         BindRefreshButton();
+        EnsureRightClickCloser();
 
         currentRemainingCardMask = (byte)(initialRemainingCardMask & 0b0011_1111);
 
@@ -108,6 +110,7 @@ public class CardDrawPopupController : MonoBehaviour
         BindCards();
         EnsureRefreshButton();
         BindRefreshButton();
+        EnsureRightClickCloser();
         SyncLocalPlayerCardState();
 
         if (resetCardPositionsOnOpen)
@@ -230,6 +233,9 @@ public class CardDrawPopupController : MonoBehaviour
         if (card == null)
             return false;
 
+        if (IsRoundLocked())
+            return false;
+
         if (dragLockedBySubmittedCard)
             return false;
 
@@ -247,6 +253,14 @@ public class CardDrawPopupController : MonoBehaviour
 
     public void RefreshSubmittedCard()
     {
+        if (IsRoundLocked())
+        {
+            GameStatusMessageRouter.Show("라운드가 잠겨 카드 제출을 변경할 수 없습니다.");
+            SyncLocalPlayerCardState();
+            RefreshCardInteractableState();
+            return;
+        }
+
         if (!TryGetLocalPlayerState(out NetworkPlayerState localPlayer))
             return;
 
@@ -421,6 +435,21 @@ public class CardDrawPopupController : MonoBehaviour
         refreshButton.onClick.AddListener(OnClickRefreshButton);
     }
 
+    private void EnsureRightClickCloser()
+    {
+        if (popupRoot == null)
+            return;
+
+        if (rightClickCloser == null)
+            rightClickCloser = popupRoot.GetComponent<CardPopupRightClickCloser>();
+
+        if (rightClickCloser == null)
+            rightClickCloser = popupRoot.AddComponent<CardPopupRightClickCloser>();
+
+        // 팝업 버튼 오브젝트가 꺼져 컨트롤러 Update가 멈춰도, 팝업 루트가 우클릭 닫기를 대신 감시한다.
+        rightClickCloser.Bind(this);
+    }
+
     private void OnClickRefreshButton()
     {
         RefreshSubmittedCard();
@@ -453,15 +482,20 @@ public class CardDrawPopupController : MonoBehaviour
         if (!IsValidCardValue(submittedCard) && HasTemporarySelection)
             submittedCard = temporarySelectedNumber;
 
-        dragLockedBySubmittedCard = IsValidCardValue(submittedCard);
+        dragLockedBySubmittedCard = IsRoundLocked() || IsValidCardValue(submittedCard);
 
-        if (dragLockedBySubmittedCard)
+        if (IsValidCardValue(submittedCard))
             currentRemainingCardMask = ConsumeCardFromMask(currentRemainingCardMask, submittedCard);
     }
 
     private bool TryGetLocalPlayerState(out NetworkPlayerState localPlayer)
     {
         return NetworkPlayerRegistry.TryGetLocalPlayer(out localPlayer);
+    }
+
+    private bool IsRoundLocked()
+    {
+        return NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value;
     }
 
     private void AutoCollectCardsIfNeeded()
@@ -499,6 +533,43 @@ public class CardDrawPopupController : MonoBehaviour
 
         int bit = 1 << (cardValue - 1);
         return (byte)(sourceMask | bit);
+    }
+
+    private bool IsRightClickPressedThisFrame()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Mouse.current != null &&
+            UnityEngine.InputSystem.Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            return true;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        if (Input.GetMouseButtonDown(1))
+            return true;
+#endif
+
+        return false;
+    }
+}
+
+public class CardPopupRightClickCloser : MonoBehaviour
+{
+    private CardDrawPopupController owner;
+
+    public void Bind(CardDrawPopupController controller)
+    {
+        owner = controller;
+    }
+
+    private void Update()
+    {
+        if (owner == null || !owner.IsOpen)
+            return;
+
+        if (IsRightClickPressedThisFrame())
+            owner.CancelAndClosePopup();
     }
 
     private bool IsRightClickPressedThisFrame()

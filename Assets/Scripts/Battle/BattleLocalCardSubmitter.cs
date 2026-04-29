@@ -9,6 +9,19 @@ public class BattleLocalCardSubmitter : MonoBehaviour
     public void OnCardSubmitted(int cardValue)
     {
         // UI에서 온 제출 요청도 먼저 로컬에서 걸러 사용자에게 즉시 이유를 보여준다.
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+        {
+            ShowLocalFeedback("라운드가 잠겨 카드 제출을 변경할 수 없습니다.");
+
+            if (popupController != null)
+            {
+                popupController.RejectTemporarySubmission();
+                popupController.SetOpenButtonInteractable(true);
+            }
+
+            return;
+        }
+
         if (cardValue < 1 || cardValue > 6)
         {
             ShowLocalFeedback($"유효하지 않은 카드입니다. ({cardValue})");
