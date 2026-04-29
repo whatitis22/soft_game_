@@ -32,7 +32,7 @@ public class NetworkPlayerState : NetworkBehaviour
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("개인 비공개 상태")]
-    // bit 0 = 카드1, bit 1 = 카드2 ... bit 5 = 카드6
+    // bit 0 = 카드1, bit 1 = 카드2 ... bit 5 = 카드6 >> 111010(4, 6 번 카드 사용)
     public NetworkVariable<byte> RemainingNumberCardsMask =
         new(0b0011_1111, NetworkVariableReadPermission.Owner, NetworkVariableWritePermission.Server);
 

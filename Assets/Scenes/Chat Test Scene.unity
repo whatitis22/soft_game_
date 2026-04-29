@@ -4400,8 +4400,11 @@ MonoBehaviour:
   hostButton: {fileID: 566317349}
   clientButton: {fileID: 297461290}
   joinButton: {fileID: 1661996016}
+  backToNicknameButton: {fileID: 0}
   nicknameInput: {fileID: 2053629830}
   ipInput: {fileID: 460075509}
+  autoCreateBackToNicknameButton: 1
+  backToNicknameButtonLabel: "\uB2C9\uB124\uC784 \uC218\uC815"
   nicknameCountText: {fileID: 1458736322}
   nicknameCharacterLimit: 12
   statusText: {fileID: 521748782}
