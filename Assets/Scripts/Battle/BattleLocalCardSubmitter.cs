@@ -14,7 +14,10 @@ public class BattleLocalCardSubmitter : MonoBehaviour
             ShowLocalFeedback($"유효하지 않은 카드입니다. ({cardValue})");
 
             if (popupController != null)
+            {
+                popupController.RejectTemporarySubmission();
                 popupController.SetOpenButtonInteractable(true);
+            }
 
             return;
         }
@@ -25,7 +28,10 @@ public class BattleLocalCardSubmitter : MonoBehaviour
             ShowLocalFeedback("로컬 플레이어 정보를 찾지 못했습니다.");
 
             if (popupController != null)
+            {
+                popupController.RejectTemporarySubmission();
                 popupController.SetOpenButtonInteractable(true);
+            }
 
             return;
         }
@@ -35,7 +41,10 @@ public class BattleLocalCardSubmitter : MonoBehaviour
             ShowLocalFeedback("이미 이번 라운드에 카드를 제출했습니다.");
 
             if (popupController != null)
+            {
+                popupController.RejectTemporarySubmission();
                 popupController.SetOpenButtonInteractable(true);
+            }
 
             return;
         }
@@ -45,7 +54,10 @@ public class BattleLocalCardSubmitter : MonoBehaviour
             ShowLocalFeedback($"카드 {cardValue}는 이미 사용했거나 보유하지 않았습니다.");
 
             if (popupController != null)
+            {
+                popupController.RejectTemporarySubmission();
                 popupController.SetOpenButtonInteractable(true);
+            }
 
             return;
         }

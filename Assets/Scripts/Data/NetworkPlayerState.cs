@@ -160,6 +160,16 @@ public class NetworkPlayerState : NetworkBehaviour
         RemainingNumberCardsMask.Value = (byte)(current & ~mask);
     }
 
+    public void ServerReturnNumberCard(int cardValue)
+    {
+        if (!IsServer || cardValue < 1 || cardValue > 6)
+            return;
+
+        // 임시 제출을 취소할 때 서버 보유 카드 마스크에 해당 카드를 되돌린다.
+        byte mask = (byte)(1 << (cardValue - 1));
+        RemainingNumberCardsMask.Value = (byte)(RemainingNumberCardsMask.Value | mask);
+    }
+
     public void ServerSetReady(bool ready)
     {
         if (!IsServer)
@@ -172,6 +182,18 @@ public class NetworkPlayerState : NetworkBehaviour
     {
         if (!IsServer)
             return;
+
+        SubmittedCard.Value = -1;
+    }
+
+    public void ServerCancelSubmittedCard()
+    {
+        if (!IsServer)
+            return;
+
+        int submittedCard = SubmittedCard.Value;
+        if (submittedCard >= 1 && submittedCard <= 6)
+            ServerReturnNumberCard(submittedCard);
 
         SubmittedCard.Value = -1;
     }
@@ -215,6 +237,26 @@ public class NetworkPlayerState : NetworkBehaviour
         ServerConsumeNumberCard(cardValue);
 
         Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} 제출");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestCancelSubmittedCardRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        // 제출 취소도 자기 PlayerObject에 대해서만 허용한다.
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "자신의 카드 제출만 취소할 수 있습니다.");
+            return;
+        }
+
+        if (SubmittedCard.Value < 1 || SubmittedCard.Value > 6)
+            return;
+
+        ServerCancelSubmittedCard();
     }
 
     [Rpc(SendTo.Server)]

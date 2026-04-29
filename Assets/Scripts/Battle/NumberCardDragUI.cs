@@ -11,7 +11,7 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     [SerializeField] private float returnSpeed = 1800f;
     [SerializeField, Range(0f, 1f)] private float disabledAlpha = 0.35f;
 
-    [Tooltip("ºñ¿öµÎ¸é ºÎ¸ğ RectTransform À» »ç¿ëÇÕ´Ï´Ù.")]
+    [Tooltip("ë¹„ì›Œë‘ë©´ ë¶€ëª¨ RectTransform ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.")]
     [SerializeField] private RectTransform dragParentRect;
 
     private readonly Vector3[] worldCorners = new Vector3[4];
@@ -23,6 +23,7 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     private Vector2 startAnchoredPosition;
     private float pointerOffsetY;
     private bool isInteractable = true;
+    private bool isDragLocked;
     private bool isDragging;
     private bool isReturning;
 
@@ -86,6 +87,20 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         ApplyInteractableVisual();
     }
 
+    public void SetDragLocked(bool locked)
+    {
+        isDragLocked = locked;
+
+        if (isDragLocked)
+        {
+            // ì œì¶œëœ ì¹´ë“œê°€ ìˆì„ ë•ŒëŠ” ì¹´ë“œ ìœ„ì¹˜ëŠ” ìœ ì§€í•˜ë˜ ìƒˆ ë“œë˜ê·¸ë§Œ ë§‰ëŠ”ë‹¤.
+            isDragging = false;
+            isReturning = false;
+        }
+
+        ApplyInteractableVisual();
+    }
+
     public void ResetToStartImmediate()
     {
         isDragging = false;
@@ -117,7 +132,7 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!isInteractable)
+        if (!isInteractable || isDragLocked)
             return;
 
         if (eventData.button != PointerEventData.InputButton.Left)
@@ -128,11 +143,11 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
         if (cardValue < 1 || cardValue > 6)
         {
-            Debug.LogWarning($"{name}: cardValue °¡ Àß¸øµÇ¾ú½À´Ï´Ù. ÇöÀç °ª = {cardValue}");
+            Debug.LogWarning($"{name}: cardValue ê°€ ì˜ëª»ë˜ì—ˆìŠµë‹ˆë‹¤. í˜„ì¬ ê°’ = {cardValue}");
             return;
         }
 
-        Debug.Log($"{name}: µå·¡±× ½ÃÀÛ / cardValue = {cardValue}");
+        Debug.Log($"{name}: ë“œë˜ê·¸ ì‹œì‘ / cardValue = {cardValue}");
 
         isDragging = true;
         isReturning = false;
@@ -157,7 +172,7 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         if (!isDragging)
             return;
 
-        if (!isInteractable)
+        if (!isInteractable || isDragLocked)
             return;
 
         if (dragParentRect == null)
@@ -203,7 +218,7 @@ public class NumberCardDragUI : MonoBehaviour, IBeginDragHandler, IDragHandler, 
             return;
 
         canvasGroup.alpha = isInteractable ? 1f : disabledAlpha;
-        canvasGroup.interactable = isInteractable;
-        canvasGroup.blocksRaycasts = isInteractable && !isDragging;
+        canvasGroup.interactable = isInteractable && !isDragLocked;
+        canvasGroup.blocksRaycasts = isInteractable && !isDragLocked && !isDragging;
     }
 }
