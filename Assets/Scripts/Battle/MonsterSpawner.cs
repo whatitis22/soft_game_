@@ -166,6 +166,14 @@ public class MonsterSpawner : MonoBehaviour
         return true;
     }
 
+    public bool CanSpawnMonster(MonsterData monsterData)
+    {
+        if (monsterData == null)
+            return false;
+
+        return TryGetMonsterPrefab(monsterData.prefab_name, out _, false);
+    }
+
     public bool TryGetCurrentMonsterState(out MonsterBattleState state)
     {
         state = currentMonsterState;
@@ -311,13 +319,15 @@ public class MonsterSpawner : MonoBehaviour
             monsterTable.LoadMonsterTable();
     }
 
-    private bool TryGetMonsterPrefab(string prefabName, out GameObject prefab)
+    private bool TryGetMonsterPrefab(string prefabName, out GameObject prefab, bool logWarnings = true)
     {
         prefab = null;
 
         if (string.IsNullOrWhiteSpace(prefabName))
         {
-            Debug.LogWarning("MonsterSpawner: 몬스터 데이터의 prefab_name이 비어 있습니다.");
+            if (logWarnings)
+                Debug.LogWarning("MonsterSpawner: 몬스터 데이터의 prefab_name이 비어 있습니다.");
+
             return false;
         }
 
@@ -342,7 +352,9 @@ public class MonsterSpawner : MonoBehaviour
             }
         }
 
-        Debug.LogWarning($"MonsterSpawner: prefab_name '{prefabName}'에 해당하는 프리펩 참조가 없습니다.");
+        if (logWarnings)
+            Debug.LogWarning($"MonsterSpawner: prefab_name '{prefabName}'에 해당하는 프리펩 참조가 없습니다.");
+
         return false;
     }
 

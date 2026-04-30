@@ -2439,6 +2439,8 @@ GameObject:
   - component: {fileID: 1953090736}
   - component: {fileID: 1953090735}
   - component: {fileID: 1953090737}
+  - component: {fileID: 1953090738}
+  - component: {fileID: 1953090739}
   m_Layer: 0
   m_Name: NetworkObject
   m_TagString: Untagged
@@ -2499,6 +2501,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleAnimationSync
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &1953090738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953090734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3ae35dc33c84247ad2d9f623b9e36dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleFlowController
+  monsterSpawner: {fileID: 985661904}
+  monsterTable: {fileID: 1664877845}
+  defaultMonsterStageName: Grassland
+  currentStageTableChance: 0.95
+  resolveDelayAfterLock: 1
+  attackStepDelay: 0.6
+  resultAnimationDelay: 0.4
+  attackTriggerName: Hit
+  missTriggerName: Hit
+  victoryTriggerName: Victory
+  defeatTriggerName: Defeat
+--- !u!114 &1953090739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953090734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4680715d5d9d4f5bb020dce8054f9dd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleFlowTester
+  controller: {fileID: 1953090738}
+  stageName: Grassland
 --- !u!1 &1975341496
 GameObject:
   m_ObjectHideFlags: 0

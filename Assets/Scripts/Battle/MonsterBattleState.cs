@@ -24,6 +24,8 @@ public class MonsterBattleState : MonoBehaviour
 
     private MonsterData monsterData;
     private bool deathAnimationStarted;
+    private bool deathAnimationPending;
+    private bool deathReported;
     private int deathSequenceVersion;
 
     public event Action<MonsterBattleState, int> Damaged;
@@ -34,6 +36,7 @@ public class MonsterBattleState : MonoBehaviour
     public int MaxHp => maxHp;
     public int CurrentHp => currentHp;
     public bool IsDead => currentHp <= 0;
+    public bool HasPendingDeathAnimation => deathAnimationPending;
 
     public void Initialize(MonsterData data, string hpTextName)
     {
@@ -44,6 +47,8 @@ public class MonsterBattleState : MonoBehaviour
         maxHp = Mathf.Max(1, data != null ? data.HP : maxHp);
         currentHp = maxHp;
         deathAnimationStarted = false;
+        deathAnimationPending = false;
+        deathReported = false;
         deathSequenceVersion++;
 
         CacheReferences();
@@ -67,6 +72,11 @@ public class MonsterBattleState : MonoBehaviour
 
     public bool ApplyDamage(int damage)
     {
+        return ApplyDamage(damage, false);
+    }
+
+    public bool ApplyDamage(int damage, bool deferDeathAnimation)
+    {
         if (damage <= 0 || IsDead)
             return false;
 
@@ -77,10 +87,9 @@ public class MonsterBattleState : MonoBehaviour
         RefreshHpText();
         Damaged?.Invoke(this, appliedDamage);
 
-        // 사망 시 제거는 하지 않고, 기존 프리펩의 Die 애니메이션 상태만 켠다.
         if (IsDead)
         {
-            BeginDeathSequence();
+            HandleDeathReached(deferDeathAnimation);
         }
         else
         {
@@ -100,6 +109,8 @@ public class MonsterBattleState : MonoBehaviour
         if (!IsDead)
         {
             deathAnimationStarted = false;
+            deathAnimationPending = false;
+            deathReported = false;
             deathSequenceVersion++;
             SetAnimatorBoolIfExists(dieBoolName, false);
         }
@@ -116,12 +127,14 @@ public class MonsterBattleState : MonoBehaviour
         if (currentHp > 0)
         {
             deathAnimationStarted = false;
+            deathAnimationPending = false;
+            deathReported = false;
             deathSequenceVersion++;
             SetAnimatorBoolIfExists(dieBoolName, false);
         }
         else if (previousHp > 0)
         {
-            BeginDeathSequence();
+            HandleDeathReached(false);
         }
 
         RefreshHpText();
@@ -138,6 +151,8 @@ public class MonsterBattleState : MonoBehaviour
     {
         currentHp = maxHp;
         deathAnimationStarted = false;
+        deathAnimationPending = false;
+        deathReported = false;
         deathSequenceVersion++;
         SetAnimatorBoolIfExists(dieBoolName, false);
         RefreshHpText();
@@ -197,12 +212,41 @@ public class MonsterBattleState : MonoBehaviour
 
     private void BeginDeathSequence()
     {
+        if (deathAnimationStarted)
+            return;
+
         PlayDeathAnimation();
-        Died?.Invoke(this);
+        deathAnimationPending = false;
 
         // Die 상태로 전환된 뒤 실제 클립 재생이 끝나는 순간까지 기다렸다가 제거 요청을 알린다.
         int sequenceVersion = deathSequenceVersion;
         StartCoroutine(WaitForDeathAnimationEnd(sequenceVersion));
+    }
+
+    private void HandleDeathReached(bool deferDeathAnimation)
+    {
+        if (!deathReported)
+        {
+            deathReported = true;
+            Died?.Invoke(this);
+        }
+
+        if (deferDeathAnimation)
+        {
+            deathAnimationPending = true;
+            return;
+        }
+
+        BeginDeathSequence();
+    }
+
+    public void PlayPendingDeathAnimation()
+    {
+        if (!IsDead)
+            return;
+
+        // 전투 연출이 모두 끝난 뒤 미뤄둔 Die 애니메이션을 시작한다.
+        HandleDeathReached(false);
     }
 
     private IEnumerator WaitForDeathAnimationEnd(int sequenceVersion)

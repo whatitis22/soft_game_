@@ -39,6 +39,9 @@ public class NetworkSessionState : NetworkBehaviour
     public NetworkVariable<int> CurrentStage =
         new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<FixedString64Bytes> CurrentMonsterStageName =
+        new(new FixedString64Bytes("Grassland"), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<bool> IsRoundLocked =
         new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -59,6 +62,7 @@ public class NetworkSessionState : NetworkBehaviour
 
     public int MaxChatHistoryEntries => Mathf.Max(1, maxChatHistoryEntries);
     public float RoundLockHoldSeconds => Mathf.Max(0f, roundLockHoldSeconds);
+    public string CurrentMonsterStageNameText => CurrentMonsterStageName.Value.ToString();
 
     private readonly System.Collections.Generic.List<NetworkPlayerState> roundLockPlayers =
         new System.Collections.Generic.List<NetworkPlayerState>();
@@ -145,6 +149,80 @@ public class NetworkSessionState : NetworkBehaviour
 
         allCardsSubmittedHeldSeconds = 0f;
         ServerSetRoundLocked(false);
+    }
+
+    public void ServerSetCurrentMonsterStageName(string stageName)
+    {
+        if (!IsServer)
+            return;
+
+        string normalizedStageName = string.IsNullOrWhiteSpace(stageName)
+            ? "Grassland"
+            : stageName.Trim();
+
+        CurrentMonsterStageName.Value = new FixedString64Bytes(normalizedStageName);
+    }
+
+    public int GetInsuranceAmount(BattleCrystalColor color)
+    {
+        return color switch
+        {
+            BattleCrystalColor.Red => InsuranceRed.Value,
+            BattleCrystalColor.Blue => InsuranceBlue.Value,
+            BattleCrystalColor.Green => InsuranceGreen.Value,
+            _ => 0
+        };
+    }
+
+    public int GetTotalInsuranceCrystals()
+    {
+        return Mathf.Max(0, InsuranceRed.Value)
+            + Mathf.Max(0, InsuranceBlue.Value)
+            + Mathf.Max(0, InsuranceGreen.Value);
+    }
+
+    public void ServerAddInsuranceCrystals(BattleCrystalColor color, int amount)
+    {
+        if (!IsServer || amount <= 0)
+            return;
+
+        switch (color)
+        {
+            case BattleCrystalColor.Red:
+                InsuranceRed.Value = Mathf.Max(0, InsuranceRed.Value + amount);
+                break;
+
+            case BattleCrystalColor.Blue:
+                InsuranceBlue.Value = Mathf.Max(0, InsuranceBlue.Value + amount);
+                break;
+
+            case BattleCrystalColor.Green:
+                InsuranceGreen.Value = Mathf.Max(0, InsuranceGreen.Value + amount);
+                break;
+        }
+    }
+
+    public bool ServerTryRemoveOneInsuranceCrystal(BattleCrystalColor color)
+    {
+        if (!IsServer || GetInsuranceAmount(color) <= 0)
+            return false;
+
+        switch (color)
+        {
+            case BattleCrystalColor.Red:
+                InsuranceRed.Value = Mathf.Max(0, InsuranceRed.Value - 1);
+                return true;
+
+            case BattleCrystalColor.Blue:
+                InsuranceBlue.Value = Mathf.Max(0, InsuranceBlue.Value - 1);
+                return true;
+
+            case BattleCrystalColor.Green:
+                InsuranceGreen.Value = Mathf.Max(0, InsuranceGreen.Value - 1);
+                return true;
+        }
+
+        return false;
     }
 
     public void ServerSetHostInfo(ulong hostClientId, string hostNickname)

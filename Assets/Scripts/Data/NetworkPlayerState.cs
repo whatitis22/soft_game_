@@ -103,6 +103,50 @@ public class NetworkPlayerState : NetworkBehaviour
         CrystalGreen.Value = Mathf.Max(0, CrystalGreen.Value + greenDelta);
     }
 
+    public int GetCrystalAmount(BattleCrystalColor color)
+    {
+        return color switch
+        {
+            BattleCrystalColor.Red => CrystalRed.Value,
+            BattleCrystalColor.Blue => CrystalBlue.Value,
+            BattleCrystalColor.Green => CrystalGreen.Value,
+            _ => 0
+        };
+    }
+
+    public void ServerSetCrystalAmount(BattleCrystalColor color, int amount)
+    {
+        if (!IsServer)
+            return;
+
+        int clampedAmount = Mathf.Max(0, amount);
+        switch (color)
+        {
+            case BattleCrystalColor.Red:
+                CrystalRed.Value = clampedAmount;
+                break;
+
+            case BattleCrystalColor.Blue:
+                CrystalBlue.Value = clampedAmount;
+                break;
+
+            case BattleCrystalColor.Green:
+                CrystalGreen.Value = clampedAmount;
+                break;
+        }
+    }
+
+    public int ServerRemoveAllCrystals(BattleCrystalColor color)
+    {
+        if (!IsServer)
+            return 0;
+
+        // 패널티는 선택된 결정석 색상 하나를 전부 보험항아리로 옮기기 위해 현재량을 반환한다.
+        int removedAmount = GetCrystalAmount(color);
+        ServerSetCrystalAmount(color, 0);
+        return removedAmount;
+    }
+
     public void ServerSetJob(JobType newJob)
     {
         if (!IsServer)
