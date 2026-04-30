@@ -8,6 +8,8 @@ public class MonsterSpawnTester : MonoBehaviour
     [SerializeField] private MonsterSpawner spawner;
     [SerializeField] private MonsterTable monsterTable;
     [SerializeField] private int selectedMonsterIndex;
+    [SerializeField, Min(1)] private int testDamageAmount = 1;
+    [SerializeField, Min(1)] private int testHealAmount = 1;
 
     private static readonly MonsterData[] EmptyMonsters = Array.Empty<MonsterData>();
 
@@ -40,6 +42,8 @@ public class MonsterSpawnTester : MonoBehaviour
     }
 
     public bool CanRemove => Spawner != null && Spawner.HasSpawnedMonster;
+    public int TestDamageAmount => Mathf.Max(1, testDamageAmount);
+    public int TestHealAmount => Mathf.Max(1, testHealAmount);
 
     private void Awake()
     {
@@ -51,6 +55,8 @@ public class MonsterSpawnTester : MonoBehaviour
     {
         CacheSceneReferences();
         ClampSelectedMonsterIndex();
+        testDamageAmount = Mathf.Max(1, testDamageAmount);
+        testHealAmount = Mathf.Max(1, testHealAmount);
     }
 
     public void RefreshMonsterTable()
@@ -120,6 +126,30 @@ public class MonsterSpawnTester : MonoBehaviour
             return false;
 
         return Spawner.RemoveCurrentMonster();
+    }
+
+    public bool ApplyTestDamage()
+    {
+        if (Spawner == null)
+            return false;
+
+        return Spawner.ApplyDamageToCurrentMonster(TestDamageAmount);
+    }
+
+    public bool HealTestMonster()
+    {
+        if (Spawner == null)
+            return false;
+
+        return Spawner.HealCurrentMonster(TestHealAmount);
+    }
+
+    public bool ResetTestMonsterHp()
+    {
+        if (Spawner == null)
+            return false;
+
+        return Spawner.ResetCurrentMonsterHp();
     }
 
     private void CacheSceneReferences()

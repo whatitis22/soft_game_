@@ -1451,6 +1451,8 @@ MonoBehaviour:
   spawner: {fileID: 985661904}
   monsterTable: {fileID: 1664877845}
   selectedMonsterIndex: 0
+  testDamageAmount: 1
+  testHealAmount: 1
 --- !u!1 &999057059
 GameObject:
   m_ObjectHideFlags: 0

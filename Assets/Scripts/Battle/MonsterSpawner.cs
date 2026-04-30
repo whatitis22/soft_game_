@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -34,10 +33,12 @@ public class MonsterSpawner : MonoBehaviour
 
     private GameObject currentMonsterInstance;
     private MonsterData currentMonsterData;
+    private MonsterBattleState currentMonsterState;
 
     public MonsterTable MonsterTable => monsterTable;
     public GameObject CurrentMonsterInstance => currentMonsterInstance;
     public MonsterData CurrentMonsterData => currentMonsterData;
+    public MonsterBattleState CurrentMonsterState => currentMonsterState;
     public bool HasSpawnedMonster => currentMonsterInstance != null;
 
     private void Awake()
@@ -122,11 +123,60 @@ public class MonsterSpawner : MonoBehaviour
         currentMonsterInstance = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation, parent);
         currentMonsterInstance.name = $"{prefab.name}_{monsterData.id}";
         currentMonsterData = monsterData;
-
-        ApplyHpText(currentMonsterInstance, monsterData.HP);
+        currentMonsterState = GetOrCreateMonsterState(currentMonsterInstance);
+        currentMonsterState.DeathAnimationFinished += HandleCurrentMonsterDeathAnimationFinished;
+        currentMonsterState.Initialize(monsterData, hpTextObjectName);
 
         Debug.Log($"MonsterSpawner: {monsterData.monster_name}({monsterData.id}) 소환 완료");
         return true;
+    }
+
+    public bool ApplyDamageToCurrentMonster(int damage)
+    {
+        if (!TryGetCurrentMonsterState(out MonsterBattleState state))
+            return false;
+
+        // 외부 전투 판정은 이 함수만 호출해도 현재 몬스터 HP와 애니메이션을 함께 갱신할 수 있다.
+        return state.ApplyDamage(damage);
+    }
+
+    public bool HealCurrentMonster(int amount)
+    {
+        if (!TryGetCurrentMonsterState(out MonsterBattleState state))
+            return false;
+
+        return state.Heal(amount);
+    }
+
+    public bool SetCurrentMonsterHp(int hp)
+    {
+        if (!TryGetCurrentMonsterState(out MonsterBattleState state))
+            return false;
+
+        state.SetCurrentHp(hp);
+        return true;
+    }
+
+    public bool ResetCurrentMonsterHp()
+    {
+        if (!TryGetCurrentMonsterState(out MonsterBattleState state))
+            return false;
+
+        state.ResetHp();
+        return true;
+    }
+
+    public bool TryGetCurrentMonsterState(out MonsterBattleState state)
+    {
+        state = currentMonsterState;
+
+        if (state == null && currentMonsterInstance != null)
+        {
+            state = currentMonsterInstance.GetComponent<MonsterBattleState>();
+            currentMonsterState = state;
+        }
+
+        return state != null;
     }
 
     public bool RemoveCurrentMonster()
@@ -134,13 +184,18 @@ public class MonsterSpawner : MonoBehaviour
         if (currentMonsterInstance == null)
         {
             currentMonsterData = null;
+            currentMonsterState = null;
             return false;
         }
 
         // 죽음 애니메이션의 투명화와 실제 오브젝트 제거는 분리해서 관리한다.
         GameObject target = currentMonsterInstance;
+        if (currentMonsterState != null)
+            currentMonsterState.DeathAnimationFinished -= HandleCurrentMonsterDeathAnimationFinished;
+
         currentMonsterInstance = null;
         currentMonsterData = null;
+        currentMonsterState = null;
 
         if (Application.isPlaying)
             Destroy(target);
@@ -149,6 +204,15 @@ public class MonsterSpawner : MonoBehaviour
 
         Debug.Log("MonsterSpawner: 소환된 몬스터를 제거했습니다.");
         return true;
+    }
+
+    private void HandleCurrentMonsterDeathAnimationFinished(MonsterBattleState finishedState)
+    {
+        if (finishedState == null || finishedState != currentMonsterState)
+            return;
+
+        // 죽음 애니메이션을 끝까지 보여준 뒤 스포너가 소유한 현재 몬스터 제거 흐름으로 정리한다.
+        RemoveCurrentMonster();
     }
 
     public void CacheSceneReferences()
@@ -304,34 +368,12 @@ public class MonsterSpawner : MonoBehaviour
         return false;
     }
 
-    private void ApplyHpText(GameObject monsterInstance, int hp)
+    private MonsterBattleState GetOrCreateMonsterState(GameObject monsterInstance)
     {
-        if (monsterInstance == null)
-            return;
+        MonsterBattleState state = monsterInstance.GetComponent<MonsterBattleState>();
+        if (state == null)
+            state = monsterInstance.AddComponent<MonsterBattleState>();
 
-        // 프리펩 자식 이름이 HP Text인 경우를 우선하고, 없으면 첫 TMP_Text에라도 HP를 주입한다.
-        TMP_Text[] textComponents = monsterInstance.GetComponentsInChildren<TMP_Text>(true);
-        TMP_Text hpText = null;
-
-        for (int i = 0; i < textComponents.Length; i++)
-        {
-            TMP_Text textComponent = textComponents[i];
-            if (textComponent != null && textComponent.gameObject.name == hpTextObjectName)
-            {
-                hpText = textComponent;
-                break;
-            }
-        }
-
-        if (hpText == null && textComponents.Length > 0)
-            hpText = textComponents[0];
-
-        if (hpText == null)
-        {
-            Debug.LogWarning($"{monsterInstance.name}: HP를 표시할 TMP_Text를 찾지 못했습니다.");
-            return;
-        }
-
-        hpText.text = hp.ToString();
+        return state;
     }
 }

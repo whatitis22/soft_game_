@@ -8,12 +8,16 @@ public class MonsterSpawnTesterEditor : Editor
     private SerializedProperty spawnerProperty;
     private SerializedProperty monsterTableProperty;
     private SerializedProperty selectedMonsterIndexProperty;
+    private SerializedProperty testDamageAmountProperty;
+    private SerializedProperty testHealAmountProperty;
 
     private void OnEnable()
     {
         spawnerProperty = serializedObject.FindProperty("spawner");
         monsterTableProperty = serializedObject.FindProperty("monsterTable");
         selectedMonsterIndexProperty = serializedObject.FindProperty("selectedMonsterIndex");
+        testDamageAmountProperty = serializedObject.FindProperty("testDamageAmount");
+        testHealAmountProperty = serializedObject.FindProperty("testHealAmount");
     }
 
     public override void OnInspectorGUI()
@@ -31,6 +35,7 @@ public class MonsterSpawnTesterEditor : Editor
 
         EditorGUILayout.Space();
         DrawControlButtons(tester);
+        DrawDamageButtons(tester);
         DrawCurrentState(tester);
     }
 
@@ -86,6 +91,46 @@ public class MonsterSpawnTesterEditor : Editor
         }
     }
 
+    private void DrawDamageButtons(MonsterSpawnTester tester)
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("몬스터 HP 테스트", EditorStyles.boldLabel);
+
+        EditorGUILayout.PropertyField(testDamageAmountProperty, new GUIContent("데미지"));
+        EditorGUILayout.PropertyField(testHealAmountProperty, new GUIContent("회복량"));
+        serializedObject.ApplyModifiedProperties();
+
+        bool hasMonster = tester.Spawner != null && tester.Spawner.HasSpawnedMonster;
+
+        using (new EditorGUI.DisabledScope(!hasMonster))
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("데미지 적용"))
+            {
+                tester.ApplyTestDamage();
+                MarkDirty(tester);
+                Repaint();
+            }
+
+            if (GUILayout.Button("회복"))
+            {
+                tester.HealTestMonster();
+                MarkDirty(tester);
+                Repaint();
+            }
+
+            if (GUILayout.Button("HP 리셋"))
+            {
+                tester.ResetTestMonsterHp();
+                MarkDirty(tester);
+                Repaint();
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+    }
+
     private void DrawCurrentState(MonsterSpawnTester tester)
     {
         if (tester.Spawner == null)
@@ -94,7 +139,11 @@ public class MonsterSpawnTesterEditor : Editor
         MonsterData currentMonster = tester.Spawner.CurrentMonsterData;
         if (tester.Spawner.HasSpawnedMonster && currentMonster != null)
         {
-            EditorGUILayout.HelpBox($"현재 소환됨: {currentMonster.monster_name} ({currentMonster.id})", MessageType.Info);
+            string hpText = string.Empty;
+            if (tester.Spawner.TryGetCurrentMonsterState(out MonsterBattleState state))
+                hpText = $" / HP {state.CurrentHp} / {state.MaxHp}";
+
+            EditorGUILayout.HelpBox($"현재 소환됨: {currentMonster.monster_name} ({currentMonster.id}){hpText}", MessageType.Info);
         }
         else
         {
