@@ -44,6 +44,12 @@ public static class GameStatusMessageRouter
         EnsureFallbackOverlay().Show(message ?? string.Empty, autoClear);
     }
 
+    public static void RefreshFallbackFont()
+    {
+        if (fallbackOverlay != null)
+            fallbackOverlay.ApplyConfiguredFont();
+    }
+
     private static FallbackOverlay EnsureFallbackOverlay()
     {
         if (fallbackOverlay != null)
@@ -75,6 +81,7 @@ public static class GameStatusMessageRouter
                 BuildOverlay();
 
             // 빈 메시지는 화면을 숨기는 신호로 사용한다.
+            ApplyConfiguredFont();
             messageText.text = message ?? string.Empty;
             SetVisible(!string.IsNullOrEmpty(message));
 
@@ -141,6 +148,20 @@ public static class GameStatusMessageRouter
             messageText.color = Color.white;
             messageText.fontSize = 26f;
             messageText.textWrappingMode = TextWrappingModes.Normal;
+            ApplyConfiguredFont();
+        }
+
+        public void ApplyConfiguredFont()
+        {
+            if (messageText == null)
+                return;
+
+            TMP_FontAsset configuredFont = GameStatusMessageSettings.Instance != null
+                ? GameStatusMessageSettings.Instance.StatusFont
+                : null;
+
+            if (configuredFont != null)
+                messageText.font = configuredFont;
         }
 
         private void SetVisible(bool visible)

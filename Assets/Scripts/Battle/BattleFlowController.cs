@@ -23,7 +23,9 @@ public class BattleFlowController : NetworkBehaviour
 
     [Header("Round Timing")]
     [SerializeField, Min(0f)] private float resolveDelayAfterLock = 1f;
-    [SerializeField, Min(0f)] private float attackStepDelay = 0.6f;
+    [SerializeField, Min(0f)] private float attackAnimationDuration = 0.6f;
+    [SerializeField, Min(0f)] private float missAnimationDuration = 0.6f;
+    [SerializeField, Min(0f)] private float delayAfterEachAction = 0f;
     [SerializeField, Min(0f)] private float resultAnimationDelay = 0.4f;
 
     [Header("Animation Triggers")]
@@ -50,7 +52,10 @@ public class BattleFlowController : NetworkBehaviour
 
     public bool IsResolvingRound => resolvingRound || resolveCoroutine != null;
     public float ResolveDelayAfterLock => Mathf.Max(0f, resolveDelayAfterLock);
-    public float AttackStepDelay => Mathf.Max(0f, attackStepDelay);
+    public float AttackAnimationDuration => Mathf.Max(0f, attackAnimationDuration);
+    public float MissAnimationDuration => Mathf.Max(0f, missAnimationDuration);
+    public float DelayAfterEachAction => Mathf.Max(0f, delayAfterEachAction);
+    public float AttackStepDelay => AttackAnimationDuration + DelayAfterEachAction;
     public MonsterData CurrentMonsterData => monsterSpawner != null ? monsterSpawner.CurrentMonsterData : null;
 
     private void Awake()
@@ -78,7 +83,9 @@ public class BattleFlowController : NetworkBehaviour
     {
         currentStageTableChance = Mathf.Clamp01(currentStageTableChance);
         resolveDelayAfterLock = Mathf.Max(0f, resolveDelayAfterLock);
-        attackStepDelay = Mathf.Max(0f, attackStepDelay);
+        attackAnimationDuration = Mathf.Max(0f, attackAnimationDuration);
+        missAnimationDuration = Mathf.Max(0f, missAnimationDuration);
+        delayAfterEachAction = Mathf.Max(0f, delayAfterEachAction);
         resultAnimationDelay = Mathf.Max(0f, resultAnimationDelay);
 
         if (string.IsNullOrWhiteSpace(defaultMonsterStageName))
@@ -253,10 +260,11 @@ public class BattleFlowController : NetworkBehaviour
             PlayStandingTrigger(participant.PlayerIndex, participant.IsMiss ? missTriggerName : attackTriggerName);
 
             if (!participant.IsMiss && participant.AttackPower > 0 && !monsterState.IsDead)
-                participant.AppliedDamage = monsterState.ApplyDamage(participant.AttackPower, true);
+                participant.AppliedDamage = monsterSpawner.ApplyDamageToCurrentMonster(participant.AttackPower, true);
 
-            if (AttackStepDelay > 0f)
-                yield return new WaitForSeconds(AttackStepDelay);
+            float actionWait = GetActionWaitSeconds(participant);
+            if (actionWait > 0f)
+                yield return new WaitForSeconds(actionWait);
         }
 
         if (monsterState.IsDead)
@@ -268,7 +276,7 @@ public class BattleFlowController : NetworkBehaviour
             if (resultAnimationDelay > 0f)
                 yield return new WaitForSeconds(resultAnimationDelay);
 
-            monsterState.PlayPendingDeathAnimation();
+            monsterSpawner.PlayCurrentMonsterPendingDeathAnimation();
         }
         else
         {
@@ -826,6 +834,15 @@ public class BattleFlowController : NetworkBehaviour
         }
 
         BattlePlayerStandingRegistry.PlayCustom(playerIndex, triggerName);
+    }
+
+    private float GetActionWaitSeconds(BattleRoundParticipant participant)
+    {
+        float animationDuration = participant != null && participant.IsMiss
+            ? MissAnimationDuration
+            : AttackAnimationDuration;
+
+        return animationDuration + DelayAfterEachAction;
     }
 
     [Rpc(SendTo.ClientsAndHost)]

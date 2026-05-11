@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -34,11 +35,13 @@ public class MonsterSpawner : MonoBehaviour
     private GameObject currentMonsterInstance;
     private MonsterData currentMonsterData;
     private MonsterBattleState currentMonsterState;
+    private NetworkMonsterState currentNetworkMonsterState;
 
     public MonsterTable MonsterTable => monsterTable;
     public GameObject CurrentMonsterInstance => currentMonsterInstance;
     public MonsterData CurrentMonsterData => currentMonsterData;
     public MonsterBattleState CurrentMonsterState => currentMonsterState;
+    public NetworkMonsterState CurrentNetworkMonsterState => currentNetworkMonsterState;
     public bool HasSpawnedMonster => currentMonsterInstance != null;
 
     private void Awake()
@@ -119,13 +122,40 @@ public class MonsterSpawner : MonoBehaviour
         if (!TryGetSpawnPoint(out Transform spawnPoint))
             return false;
 
-        Transform parent = spawnedMonsterParent != null ? spawnedMonsterParent : null;
+        bool useNetworkSpawn = ShouldUseNetworkSpawn();
+        if (useNetworkSpawn && !CanRunServerNetworkSpawn())
+        {
+            Debug.LogWarning("MonsterSpawner: Network monster spawn must run on the server.");
+            return false;
+        }
+
+        if (useNetworkSpawn && prefab.GetComponent<NetworkObject>() == null)
+        {
+            Debug.LogWarning($"MonsterSpawner: '{prefab.name}' prefab has no NetworkObject.");
+            return false;
+        }
+
+        if (useNetworkSpawn && prefab.GetComponent<NetworkMonsterState>() == null)
+        {
+            Debug.LogWarning($"MonsterSpawner: '{prefab.name}' prefab has no NetworkMonsterState.");
+            return false;
+        }
+
+        Transform parent = useNetworkSpawn ? null : spawnedMonsterParent != null ? spawnedMonsterParent : null;
         currentMonsterInstance = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation, parent);
         currentMonsterInstance.name = $"{prefab.name}_{monsterData.id}";
         currentMonsterData = monsterData;
         currentMonsterState = GetOrCreateMonsterState(currentMonsterInstance);
+        currentNetworkMonsterState = currentMonsterInstance.GetComponent<NetworkMonsterState>();
         currentMonsterState.DeathAnimationFinished += HandleCurrentMonsterDeathAnimationFinished;
-        currentMonsterState.Initialize(monsterData, hpTextObjectName);
+
+        if (currentNetworkMonsterState != null)
+            currentNetworkMonsterState.InitializeBeforeSpawn(monsterData, hpTextObjectName);
+        else
+            currentMonsterState.Initialize(monsterData, hpTextObjectName);
+
+        if (useNetworkSpawn)
+            currentMonsterInstance.GetComponent<NetworkObject>().Spawn();
 
         Debug.Log($"MonsterSpawner: {monsterData.monster_name}({monsterData.id}) 소환 완료");
         return true;
@@ -133,11 +163,18 @@ public class MonsterSpawner : MonoBehaviour
 
     public bool ApplyDamageToCurrentMonster(int damage)
     {
+        return ApplyDamageToCurrentMonster(damage, false);
+    }
+
+    public bool ApplyDamageToCurrentMonster(int damage, bool deferDeathAnimation)
+    {
         if (!TryGetCurrentMonsterState(out MonsterBattleState state))
             return false;
 
         // 외부 전투 판정은 이 함수만 호출해도 현재 몬스터 HP와 애니메이션을 함께 갱신할 수 있다.
-        return state.ApplyDamage(damage);
+        bool applied = state.ApplyDamage(damage, deferDeathAnimation);
+        SyncCurrentMonsterNetworkHp();
+        return applied;
     }
 
     public bool HealCurrentMonster(int amount)
@@ -145,7 +182,9 @@ public class MonsterSpawner : MonoBehaviour
         if (!TryGetCurrentMonsterState(out MonsterBattleState state))
             return false;
 
-        return state.Heal(amount);
+        bool healed = state.Heal(amount);
+        SyncCurrentMonsterNetworkHp();
+        return healed;
     }
 
     public bool SetCurrentMonsterHp(int hp)
@@ -154,6 +193,7 @@ public class MonsterSpawner : MonoBehaviour
             return false;
 
         state.SetCurrentHp(hp);
+        SyncCurrentMonsterNetworkHp();
         return true;
     }
 
@@ -163,6 +203,20 @@ public class MonsterSpawner : MonoBehaviour
             return false;
 
         state.ResetHp();
+        SyncCurrentMonsterNetworkHp();
+        return true;
+    }
+
+    public bool PlayCurrentMonsterPendingDeathAnimation()
+    {
+        if (!TryGetCurrentMonsterState(out MonsterBattleState state))
+            return false;
+
+        if (currentNetworkMonsterState != null && CanRunServerNetworkSpawn())
+            currentNetworkMonsterState.ServerPlayDeathAnimation();
+        else
+            state.PlayPendingDeathAnimation();
+
         return true;
     }
 
@@ -171,7 +225,13 @@ public class MonsterSpawner : MonoBehaviour
         if (monsterData == null)
             return false;
 
-        return TryGetMonsterPrefab(monsterData.prefab_name, out _, false);
+        if (!TryGetMonsterPrefab(monsterData.prefab_name, out GameObject prefab, false))
+            return false;
+
+        if (ShouldUseNetworkSpawn())
+            return prefab.GetComponent<NetworkObject>() != null && prefab.GetComponent<NetworkMonsterState>() != null;
+
+        return true;
     }
 
     public bool TryGetCurrentMonsterState(out MonsterBattleState state)
@@ -193,6 +253,7 @@ public class MonsterSpawner : MonoBehaviour
         {
             currentMonsterData = null;
             currentMonsterState = null;
+            currentNetworkMonsterState = null;
             return false;
         }
 
@@ -204,9 +265,16 @@ public class MonsterSpawner : MonoBehaviour
         currentMonsterInstance = null;
         currentMonsterData = null;
         currentMonsterState = null;
+        currentNetworkMonsterState = null;
 
+        NetworkObject networkObject = target.GetComponent<NetworkObject>();
         if (Application.isPlaying)
-            Destroy(target);
+        {
+            if (networkObject != null && networkObject.IsSpawned && CanRunServerNetworkSpawn())
+                networkObject.Despawn(true);
+            else
+                Destroy(target);
+        }
         else
             DestroyImmediate(target);
 
@@ -387,5 +455,25 @@ public class MonsterSpawner : MonoBehaviour
             state = monsterInstance.AddComponent<MonsterBattleState>();
 
         return state;
+    }
+
+    private void SyncCurrentMonsterNetworkHp()
+    {
+        if (currentNetworkMonsterState == null)
+            return;
+
+        currentNetworkMonsterState.ServerRefreshHpFromState();
+    }
+
+    private bool ShouldUseNetworkSpawn()
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        return Application.isPlaying && manager != null && manager.IsListening;
+    }
+
+    private bool CanRunServerNetworkSpawn()
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        return manager == null || !manager.IsListening || manager.IsServer;
     }
 }

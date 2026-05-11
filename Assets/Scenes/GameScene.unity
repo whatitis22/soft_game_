@@ -1430,7 +1430,7 @@ MonoBehaviour:
   monsterTable: {fileID: 1664877845}
   monsterPrefabs:
   - prefabName: rock_rabbit_prefab
-    prefab: {fileID: 3963808414321090723, guid: 82ad3014ddf53604488a18bcb112274b, type: 3}
+    prefab: {fileID: 2064378665928220353, guid: 82ad3014ddf53604488a18bcb112274b, type: 3}
   monsterSpawnPoint: {fileID: 1011496535}
   spawnPointObjectName: Monster Spawn Point
   spawnedMonsterParent: {fileID: 1011496535}
@@ -2437,10 +2437,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1953090736}
+  - component: {fileID: 1953090739}
   - component: {fileID: 1953090735}
   - component: {fileID: 1953090737}
   - component: {fileID: 1953090738}
-  - component: {fileID: 1953090739}
+  - component: {fileID: 1953090740}
   m_Layer: 0
   m_Name: NetworkObject
   m_TagString: Untagged
@@ -2513,12 +2514,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3ae35dc33c84247ad2d9f623b9e36dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleFlowController
+  ShowTopMostFoldoutHeaderGroup: 1
   monsterSpawner: {fileID: 985661904}
   monsterTable: {fileID: 1664877845}
   defaultMonsterStageName: Grassland
   currentStageTableChance: 0.95
   resolveDelayAfterLock: 1
-  attackStepDelay: 0.6
+  attackAnimationDuration: 1.333
+  missAnimationDuration: 1.333
+  delayAfterEachAction: 0
   resultAnimationDelay: 0.4
   attackTriggerName: Hit
   missTriggerName: Hit
@@ -2538,6 +2542,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattleFlowTester
   controller: {fileID: 1953090738}
   stageName: Grassland
+--- !u!114 &1953090740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1953090734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e8c7b659b8e4a03b4c02f0fb1af6d71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameStatusMessageSettings
+  statusFont: {fileID: 11400000, guid: 69354bfe29535f644b5e86fc168b1316, type: 2}
 --- !u!1 &1975341496
 GameObject:
   m_ObjectHideFlags: 0

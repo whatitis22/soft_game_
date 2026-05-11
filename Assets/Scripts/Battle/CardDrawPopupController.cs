@@ -42,6 +42,8 @@ public class CardDrawPopupController : MonoBehaviour
     private int temporarySelectedNumber = -1;
     private int locallyCanceledSubmittedCard = -1;
     private bool dragLockedBySubmittedCard;
+    private bool localSubmissionPending;
+    private NetworkPlayerState observedLocalPlayer;
     private CardPopupRightClickCloser rightClickCloser;
 
     public bool IsOpen => popupRoot != null && popupRoot.activeSelf;
@@ -84,10 +86,14 @@ public class CardDrawPopupController : MonoBehaviour
     {
         if (refreshButton != null)
             refreshButton.onClick.RemoveListener(OnClickRefreshButton);
+
+        UnbindObservedLocalPlayer();
     }
 
     private void Update()
     {
+        BindObservedLocalPlayerIfNeeded();
+
         if (!IsOpen)
             return;
 
@@ -111,6 +117,7 @@ public class CardDrawPopupController : MonoBehaviour
         EnsureRefreshButton();
         BindRefreshButton();
         EnsureRightClickCloser();
+        BindObservedLocalPlayerIfNeeded();
         SyncLocalPlayerCardState();
 
         if (resetCardPositionsOnOpen)
@@ -153,6 +160,7 @@ public class CardDrawPopupController : MonoBehaviour
     public void ClearTemporarySelection()
     {
         temporarySelectedNumber = -1;
+        localSubmissionPending = false;
     }
 
     public void RejectTemporarySubmission()
@@ -162,6 +170,7 @@ public class CardDrawPopupController : MonoBehaviour
 
         // 서버 제출까지 가지 못한 임시 선택은 원래 카드 상태로 되돌린다.
         temporarySelectedNumber = -1;
+        localSubmissionPending = false;
         SyncLocalPlayerCardState();
         RefreshCardInteractableState();
     }
@@ -269,13 +278,23 @@ public class CardDrawPopupController : MonoBehaviour
         {
             if (HasTemporarySelection)
             {
-                submittedCard = temporarySelectedNumber;
-                localPlayer.RequestCancelSubmittedCardRpc();
-                locallyCanceledSubmittedCard = submittedCard;
-                temporarySelectedNumber = -1;
-                currentRemainingCardMask = ReturnCardToMask(currentRemainingCardMask, submittedCard);
-                dragLockedBySubmittedCard = false;
-                RefreshCardInteractableState();
+                if (localSubmissionPending && PlayerMaskContainsCard(localPlayer, temporarySelectedNumber))
+                {
+                    submittedCard = temporarySelectedNumber;
+                    localPlayer.RequestCancelSubmittedCardRpc();
+                    locallyCanceledSubmittedCard = submittedCard;
+                    ClearLocalSubmittedCardState(clearCanceledMarker: false);
+                    currentRemainingCardMask = ReturnCardToMask(currentRemainingCardMask, submittedCard);
+                    RefreshCardInteractableState();
+                }
+                else
+                {
+                    ClearLocalSubmittedCardState(clearCanceledMarker: true);
+                    SyncLocalPlayerCardState();
+                    ResetAllCardsImmediate();
+                    RefreshCardInteractableState();
+                }
+
                 return;
             }
 
@@ -287,9 +306,8 @@ public class CardDrawPopupController : MonoBehaviour
         // 새로고침은 서버에 제출 취소를 요청하고, 로컬 UI는 즉시 카드 반환처럼 보이게 맞춘다.
         localPlayer.RequestCancelSubmittedCardRpc();
         locallyCanceledSubmittedCard = submittedCard;
-        temporarySelectedNumber = -1;
+        ClearLocalSubmittedCardState(clearCanceledMarker: false);
         currentRemainingCardMask = ReturnCardToMask(currentRemainingCardMask, submittedCard);
-        dragLockedBySubmittedCard = false;
         RefreshCardInteractableState();
     }
 
@@ -306,6 +324,7 @@ public class CardDrawPopupController : MonoBehaviour
         }
 
         temporarySelectedNumber = card.CardValue;
+        localSubmissionPending = true;
         Debug.Log($"카드 제출 감지: {card.name} / 값 = {temporarySelectedNumber}");
 
         currentRemainingCardMask = ConsumeCardFromMask(currentRemainingCardMask, temporarySelectedNumber);
@@ -479,13 +498,94 @@ public class CardDrawPopupController : MonoBehaviour
             locallyCanceledSubmittedCard = -1;
         }
 
-        if (!IsValidCardValue(submittedCard) && HasTemporarySelection)
-            submittedCard = temporarySelectedNumber;
-
-        dragLockedBySubmittedCard = IsRoundLocked() || IsValidCardValue(submittedCard);
-
         if (IsValidCardValue(submittedCard))
+        {
+            temporarySelectedNumber = submittedCard;
+            localSubmissionPending = false;
+            dragLockedBySubmittedCard = true;
             currentRemainingCardMask = ConsumeCardFromMask(currentRemainingCardMask, submittedCard);
+            return;
+        }
+
+        if (HasTemporarySelection)
+        {
+            bool keepPendingSelection = localSubmissionPending
+                && PlayerMaskContainsCard(localPlayer, temporarySelectedNumber)
+                && !IsRoundLocked();
+
+            if (keepPendingSelection)
+            {
+                dragLockedBySubmittedCard = true;
+                currentRemainingCardMask = ConsumeCardFromMask(currentRemainingCardMask, temporarySelectedNumber);
+                return;
+            }
+
+            ClearLocalSubmittedCardState(clearCanceledMarker: true);
+        }
+
+        dragLockedBySubmittedCard = IsRoundLocked();
+    }
+
+    private void BindObservedLocalPlayerIfNeeded()
+    {
+        if (observedLocalPlayer != null && !observedLocalPlayer.IsSpawned)
+            UnbindObservedLocalPlayer();
+
+        if (!TryGetLocalPlayerState(out NetworkPlayerState localPlayer))
+            return;
+
+        if (observedLocalPlayer == localPlayer)
+            return;
+
+        UnbindObservedLocalPlayer();
+        observedLocalPlayer = localPlayer;
+        observedLocalPlayer.SubmittedCard.OnValueChanged += HandleLocalSubmittedCardChanged;
+        observedLocalPlayer.RemainingNumberCardsMask.OnValueChanged += HandleLocalRemainingCardMaskChanged;
+    }
+
+    private void UnbindObservedLocalPlayer()
+    {
+        if (observedLocalPlayer == null)
+            return;
+
+        observedLocalPlayer.SubmittedCard.OnValueChanged -= HandleLocalSubmittedCardChanged;
+        observedLocalPlayer.RemainingNumberCardsMask.OnValueChanged -= HandleLocalRemainingCardMaskChanged;
+        observedLocalPlayer = null;
+    }
+
+    private void HandleLocalSubmittedCardChanged(int previousValue, int newValue)
+    {
+        if (IsValidCardValue(newValue))
+        {
+            temporarySelectedNumber = newValue;
+            localSubmissionPending = false;
+            locallyCanceledSubmittedCard = -1;
+        }
+        else if (IsValidCardValue(previousValue))
+        {
+            ClearLocalSubmittedCardState(clearCanceledMarker: previousValue != locallyCanceledSubmittedCard);
+        }
+
+        SyncLocalPlayerCardState();
+        ResetAllCardsImmediate();
+        RefreshCardInteractableState();
+    }
+
+    private void HandleLocalRemainingCardMaskChanged(byte previousValue, byte newValue)
+    {
+        currentRemainingCardMask = (byte)(newValue & 0b0011_1111);
+        SyncLocalPlayerCardState();
+        RefreshCardInteractableState();
+    }
+
+    private void ClearLocalSubmittedCardState(bool clearCanceledMarker)
+    {
+        temporarySelectedNumber = -1;
+        localSubmissionPending = false;
+        dragLockedBySubmittedCard = false;
+
+        if (clearCanceledMarker)
+            locallyCanceledSubmittedCard = -1;
     }
 
     private bool TryGetLocalPlayerState(out NetworkPlayerState localPlayer)
@@ -515,6 +615,15 @@ public class CardDrawPopupController : MonoBehaviour
     private bool IsValidCardValue(int cardValue)
     {
         return cardValue >= 1 && cardValue <= 6;
+    }
+
+    private bool PlayerMaskContainsCard(NetworkPlayerState player, int cardValue)
+    {
+        if (player == null || !IsValidCardValue(cardValue))
+            return false;
+
+        int bit = 1 << (cardValue - 1);
+        return (player.RemainingNumberCardsMask.Value & bit) != 0;
     }
 
     private byte ConsumeCardFromMask(byte sourceMask, int cardValue)

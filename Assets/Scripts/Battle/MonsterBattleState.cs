@@ -9,7 +9,7 @@ public class MonsterBattleState : MonoBehaviour
     [Header("HP")]
     [SerializeField] private int maxHp = 1;
     [SerializeField] private int currentHp = 1;
-    [SerializeField] private bool showMaxHpInText = true;
+    [SerializeField] private bool showMaxHpInText = false;
 
     [Header("View")]
     [SerializeField] private TMP_Text hpText;
@@ -29,6 +29,7 @@ public class MonsterBattleState : MonoBehaviour
     private int deathSequenceVersion;
 
     public event Action<MonsterBattleState, int> Damaged;
+    public event Action<MonsterBattleState, int, int> HpChanged;
     public event Action<MonsterBattleState> Died;
     public event Action<MonsterBattleState> DeathAnimationFinished;
 
@@ -54,6 +55,7 @@ public class MonsterBattleState : MonoBehaviour
         CacheReferences();
         SetAnimatorBoolIfExists(dieBoolName, false);
         RefreshHpText();
+        NotifyHpChanged();
     }
 
     private void Awake()
@@ -85,6 +87,7 @@ public class MonsterBattleState : MonoBehaviour
         int appliedDamage = previousHp - currentHp;
 
         RefreshHpText();
+        NotifyHpChanged();
         Damaged?.Invoke(this, appliedDamage);
 
         if (IsDead)
@@ -116,6 +119,7 @@ public class MonsterBattleState : MonoBehaviour
         }
 
         RefreshHpText();
+        NotifyHpChanged();
         return true;
     }
 
@@ -138,6 +142,7 @@ public class MonsterBattleState : MonoBehaviour
         }
 
         RefreshHpText();
+        NotifyHpChanged();
     }
 
     public void SetMaxHp(int hp, bool refillCurrentHp)
@@ -145,6 +150,7 @@ public class MonsterBattleState : MonoBehaviour
         maxHp = Mathf.Max(1, hp);
         currentHp = refillCurrentHp ? maxHp : Mathf.Clamp(currentHp, 0, maxHp);
         RefreshHpText();
+        NotifyHpChanged();
     }
 
     public void ResetHp()
@@ -156,6 +162,26 @@ public class MonsterBattleState : MonoBehaviour
         deathSequenceVersion++;
         SetAnimatorBoolIfExists(dieBoolName, false);
         RefreshHpText();
+        NotifyHpChanged();
+    }
+
+    public void ApplyNetworkState(int syncedMaxHp, int syncedCurrentHp, string syncedHpTextName, bool resetDeathState)
+    {
+        hpTextObjectName = string.IsNullOrWhiteSpace(syncedHpTextName) ? hpTextObjectName : syncedHpTextName;
+        maxHp = Mathf.Max(1, syncedMaxHp);
+        currentHp = Mathf.Clamp(syncedCurrentHp, 0, maxHp);
+
+        if (resetDeathState && currentHp > 0)
+        {
+            deathAnimationStarted = false;
+            deathAnimationPending = false;
+            deathReported = false;
+            deathSequenceVersion++;
+            SetAnimatorBoolIfExists(dieBoolName, false);
+        }
+
+        CacheReferences();
+        RefreshHpText();
     }
 
     public void RefreshHpText()
@@ -164,6 +190,11 @@ public class MonsterBattleState : MonoBehaviour
             return;
 
         hpText.text = showMaxHpInText ? $"{currentHp} / {maxHp}" : currentHp.ToString();
+    }
+
+    private void NotifyHpChanged()
+    {
+        HpChanged?.Invoke(this, currentHp, maxHp);
     }
 
     private void CacheReferences()
