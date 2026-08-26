@@ -14,6 +14,9 @@ public class MonsterBattleState : MonoBehaviour
     [Header("View")]
     [SerializeField] private TMP_Text hpText;
     [SerializeField] private string hpTextObjectName = "HP Text";
+    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private string nameTextObjectName = "Monster Name Text";
+    [SerializeField] private Vector3 nameTextLocalPosition = new Vector3(0f, 80f, -20.1f);
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
@@ -54,6 +57,7 @@ public class MonsterBattleState : MonoBehaviour
 
         CacheReferences();
         SetAnimatorBoolIfExists(dieBoolName, false);
+        ApplyTextPlaceholder(GetDisplayText(data));
         RefreshHpText();
         NotifyHpChanged();
     }
@@ -192,6 +196,11 @@ public class MonsterBattleState : MonoBehaviour
         hpText.text = showMaxHpInText ? $"{currentHp} / {maxHp}" : currentHp.ToString();
     }
 
+    public void SetDisplayName(string displayName)
+    {
+        ApplyTextPlaceholder(string.IsNullOrWhiteSpace(displayName) ? "Monster" : displayName);
+    }
+
     private void NotifyHpChanged()
     {
         HpChanged?.Invoke(this, currentHp, maxHp);
@@ -204,6 +213,9 @@ public class MonsterBattleState : MonoBehaviour
 
         if (hpText == null)
             hpText = FindHpText();
+
+        if (nameText == null)
+            nameText = FindNameText();
     }
 
     private TMP_Text FindHpText()
@@ -225,6 +237,120 @@ public class MonsterBattleState : MonoBehaviour
         }
 
         return fallback;
+    }
+
+    private TMP_Text FindNameText()
+    {
+        TMP_Text[] textComponents = GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < textComponents.Length; i++)
+        {
+            TMP_Text textComponent = textComponents[i];
+            if (textComponent != null && textComponent.gameObject.name == nameTextObjectName)
+                return textComponent;
+        }
+
+        return null;
+    }
+
+    private string GetDisplayText(MonsterData data)
+    {
+        if (data == null)
+            return "Monster";
+
+        if (!string.IsNullOrWhiteSpace(data.preview_text))
+            return data.preview_text;
+
+        if (!string.IsNullOrWhiteSpace(data.monster_name))
+            return data.monster_name;
+
+        return string.IsNullOrWhiteSpace(data.id) ? "Monster" : data.id;
+    }
+
+    private void ApplyTextPlaceholder(string displayText)
+    {
+        HideSpriteRenderers();
+
+        if (nameText == null)
+            nameText = CreateNameText();
+
+        if (nameText == null)
+            return;
+
+        nameText.text = displayText;
+        nameText.gameObject.SetActive(true);
+    }
+
+    private TMP_Text CreateNameText()
+    {
+        if (hpText != null)
+            return CreateNameTextFromHpText();
+
+        GameObject textObject = new GameObject(nameTextObjectName);
+        textObject.transform.SetParent(transform, false);
+        textObject.transform.localPosition = nameTextLocalPosition;
+        textObject.transform.localRotation = Quaternion.identity;
+        textObject.transform.localScale = Vector3.one;
+
+        TextMeshPro textMesh = textObject.AddComponent<TextMeshPro>();
+        textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.fontSize = 80f;
+        textMesh.color = Color.white;
+        textMesh.textWrappingMode = TextWrappingModes.NoWrap;
+        textMesh.sortingOrder = 10;
+
+        RectTransform rectTransform = textObject.GetComponent<RectTransform>();
+        if (rectTransform != null)
+            rectTransform.sizeDelta = new Vector2(360f, 60f);
+
+        return textMesh;
+    }
+
+    private TMP_Text CreateNameTextFromHpText()
+    {
+        GameObject textObject = Instantiate(hpText.gameObject, hpText.transform.parent);
+        textObject.name = nameTextObjectName;
+        textObject.SetActive(true);
+
+        TMP_Text textMesh = textObject.GetComponent<TMP_Text>();
+        if (textMesh == null)
+            return null;
+
+        textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.fontSize = 80f;
+        textMesh.textWrappingMode = TextWrappingModes.NoWrap;
+        Renderer renderer = textObject.GetComponent<Renderer>();
+        if (renderer != null)
+            renderer.sortingOrder = 10;
+
+        RectTransform nameRect = textObject.GetComponent<RectTransform>();
+        RectTransform hpRect = hpText.GetComponent<RectTransform>();
+        if (nameRect != null)
+        {
+            nameRect.anchoredPosition = new Vector2(0f, 95f);
+            nameRect.sizeDelta = new Vector2(360f, 60f);
+
+            Vector3 localPosition = hpRect != null ? hpRect.localPosition : nameTextLocalPosition;
+            localPosition.x = 0f;
+            localPosition.y = 0f;
+            localPosition.z = hpRect != null ? hpRect.localPosition.z : nameTextLocalPosition.z;
+            nameRect.localPosition = localPosition;
+        }
+        else
+        {
+            textObject.transform.localPosition = nameTextLocalPosition;
+        }
+
+        return textMesh;
+    }
+
+    private void HideSpriteRenderers()
+    {
+        SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null)
+                spriteRenderers[i].enabled = false;
+        }
     }
 
     private void PlayDamagedAnimation()

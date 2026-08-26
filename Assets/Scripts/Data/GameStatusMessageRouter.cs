@@ -125,10 +125,10 @@ public static class GameStatusMessageRouter
             panelObject.transform.SetParent(transform, false);
 
             RectTransform panelRect = (RectTransform)panelObject.transform;
-            panelRect.anchorMin = new Vector2(0.5f, 1f);
-            panelRect.anchorMax = new Vector2(0.5f, 1f);
-            panelRect.pivot = new Vector2(0.5f, 1f);
-            panelRect.anchoredPosition = new Vector2(0f, -48f);
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.anchoredPosition = Vector2.zero;
             panelRect.sizeDelta = new Vector2(760f, 72f);
 
             Image panelImage = panelObject.GetComponent<Image>();

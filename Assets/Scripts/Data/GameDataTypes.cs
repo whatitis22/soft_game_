@@ -1,15 +1,16 @@
-public enum JobType
+ï»¿public enum JobType
 {
     None = 0,
 
-    Hero = 1,      // ¿ë»ç
-    Saint = 2,     // ¼º³à
-    Witch = 3,     // ¸¶³à
-    Archer = 4,    // ±Ã¼ö
-    Fighter = 5,   // °İÅõ°¡
-    Butcher = 6,   // µµ»ìÀÚ
-    Guardian = 7,  // ¼öÈ£ÀÚ
-    Assassin = 8   // ¾Ï»ìÀÚ
+    Hero = 1,      // ìš©ì‚¬
+    Saint = 2,     // ì„±ë…€
+    Witch = 3,     // ë§ˆë…€
+    Archer = 4,    // ê¶ìˆ˜
+    Fighter = 5,   // ê²©íˆ¬ê°€
+    Butcher = 6,   // ë„ì‚´ì
+    Guardian = 7,  // ìˆ˜í˜¸ì
+    Assassin = 8,  // ì•”ì‚´ì
+    Defender = 9   // ë””íœë”(ë„¤íŠ¸ë¼)
 }
 
 public enum QuestStageType

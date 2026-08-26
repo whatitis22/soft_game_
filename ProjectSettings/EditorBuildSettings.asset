@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Chat Test Scene.unity
     guid: b1d7a925354175d41af49f3941d490f4
   - enabled: 1
+    path: Assets/Scenes/MapSelectScene.unity
+    guid: eec7856d19ac54f4884fc1c9b8539f13
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1

@@ -14,13 +14,19 @@ public sealed class BattleRoundParticipant
         Player = player;
         CardValue = cardValue;
         AttackPower = cardValue;
+        RewardPriority = cardValue;
     }
 
     public NetworkPlayerState Player { get; }
     public int CardValue { get; }
     public int AttackPower { get; set; }
+    public int RewardPriority { get; set; }
     public bool IsMiss { get; set; }
+    public bool AttackCancelled { get; set; }
+    public bool DirectAttackSkipped { get; set; }
+    public AttackCancelReason CancelReason { get; set; }
     public bool AppliedDamage { get; set; }
+    public bool ReceivedBaseReward { get; set; }
     public int PlayerIndex => Player != null ? Player.PlayerIndex.Value : -1;
 }
 

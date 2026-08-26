@@ -1,4 +1,4 @@
-using Unity.Netcode;
+﻿using Unity.Netcode;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -15,7 +15,8 @@ public class JobSelectionManager : MonoBehaviour
         JobType.Fighter,
         JobType.Butcher,
         JobType.Guardian,
-        JobType.Assassin
+        JobType.Assassin,
+        JobType.Defender
     };
 
     private void Awake()
@@ -117,6 +118,7 @@ public class JobSelectionManager : MonoBehaviour
             JobType.Butcher => "도살자",
             JobType.Guardian => "수호자",
             JobType.Assassin => "암살자",
+            JobType.Defender => "\uB514\uD39C\uB354(\uB124\uD2B8\uB77C)",
             _ => "없음"
         };
     }

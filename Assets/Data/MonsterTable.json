@@ -1,41 +1,317 @@
-﻿[
-  {
-    "id": "M000",
-    "monster_name": "브리짓",
-    "danger": 5,
-    "spawn_stage": "guiltygear",
-    "HP": 99,
-    "reward_1st": "r1 g1 b1",
-    "reward_2nd": "r1 g1 b1",
-    "reward_3rd": "r1 g1 b1",
-    "prefab_name": "bridget_prefab",
-    "preview_name": "Hunt_Picture_bridget",
-    "dec": "예시용 몬스터. =============\n========================줄바꿈 \\n으로 들어감."
-  },
+[
   {
     "id": "M001",
-    "monster_name": "로크레빗",
-    "danger": 1,
-    "spawn_stage": "Grassland",
-    "HP": 7,
-    "reward_1st": "g2",
-    "reward_2nd": "b1",
-    "reward_3rd": "0",
-    "prefab_name": "rock_rabbit_prefab",
-    "preview_name": "Hunt_Picture_rock_rabbit",
-    "dec": "머리에 뿔이 나있는 토끼다."
-  },
-  {
-    "id": "M002",
     "monster_name": "슬라임",
     "danger": 1,
-    "spawn_stage": "Grassland",
+    "spawn_stage": "A → B → C",
     "HP": 4,
+    "gimmick": "없음",
     "reward_1st": "r1",
     "reward_2nd": "0",
     "reward_3rd": "0",
     "prefab_name": "slime_prefab",
-    "preview_name": "Hunt_Picture_slime",
-    "dec": "슬라임. 말랑말랑하다."
+    "preview_name": "슬라임",
+    "preview_text": "슬라임",
+    "stage_description": "WORLD A → B → C",
+    "character_lines": [
+      { "character_id": "Hero", "line": "이런 놈 잡는 데에 힘 빼지 말자고, 제발." },
+      { "character_id": "Knight", "line": "이런 놈 잡는 데에 힘 빼지 말자고, 제발." },
+      { "character_id": "Saint", "line": "잡아다 팔아도 돈은 안 될 것 같아요." }
+    ],
+    "dec": "맑은 물처럼 투명한 점액 속에 수많은 미생물이 모여 하나의 생물처럼 행동하는 군체다.\n\n평소에는 웅덩이나 물방울처럼 보이지만, 가까이 관찰하면 내부의 미세한 점들이 떼 지어 움직이는 모습을 확인할 수 있다.\n\n접촉한 생물의 체온과 영양분을 감지하면 달라붙어 서서히 분해한다. 죽은 뒤에는 군체가 무너져 오염된 물만 남기 때문에 위험성에 비해 전리품의 가치는 거의 없다."
+  },
+  {
+    "id": "M002",
+    "monster_name": "네펜데스",
+    "danger": 1,
+    "spawn_stage": "A → B → C",
+    "HP": 5,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "nepenthes_prefab",
+    "preview_name": "네펜데스",
+    "preview_text": "네펜데스",
+    "stage_description": "WORLD A → B → C",
+    "character_lines": [
+      { "character_id": "Hero", "line": "자! 흐, 흥분하지 말고오! 침착해…!" },
+      { "character_id": "Knight", "line": "자! 흐, 흥분하지 말고오! 침착해…!" },
+      { "character_id": "Saint", "line": "어, 얼마인가요? 내가 잡아도 되죠?" }
+    ],
+    "dec": "화려한 무늬의 포충낭에서 진한 꿀과 꽃향기를 풍겨 먹잇감을 유인한다.\n\n향기에 취해 가까이 다가간 생물은 미끄러운 입구를 타고 내부로 떨어져 천천히 소화된다.\n\n성체의 포충낭과 향낭에서는 고급 향료와 연금 재료가 채취되기 때문에 전리품의 가치가 매우 높다. 다만 죽은 뒤에도 한동안 달콤한 냄새가 남아 다른 포식자를 끌어들인다는 점에 주의해야 한다."
+  },
+  {
+    "id": "M003",
+    "monster_name": "로크 래빗",
+    "danger": 1,
+    "spawn_stage": "A → B → C",
+    "HP": 7,
+    "gimmick": "없음",
+    "reward_1st": "g1",
+    "reward_2nd": "b1",
+    "reward_3rd": "0",
+    "prefab_name": "rock_rabbit_prefab",
+    "preview_name": "로크 래빗",
+    "preview_text": "로크 래빗",
+    "stage_description": "WORLD A → B → C",
+    "character_lines": [
+      { "character_id": "Hero", "line": "와, 가성비 좋은 녀석이야. 힘내 보자고!" },
+      { "character_id": "Knight", "line": "와, 가성비 좋은 녀석이야. 힘내 보자고!" },
+      { "character_id": "Saint", "line": "…내가 먹을 안주가 아니니까요." }
+    ],
+    "dec": "평원과 숲은 물론 지하 동굴에서도 발견되는 대형 토끼의 일종이다.\n\n돌덩이처럼 둔중한 몸과 비정상적으로 발달한 턱 때문에 지금의 이름이 붙었다.\n\n커다란 턱으로 뼈와 갑옷까지 깨물어 부수며, 강력한 뒷다리로 순식간에 거리를 좁힌다. 그러나 끊임없이 사용되는 근육 탓에 고기가 몹시 질겨 큰 몸집에 비해 전리품의 가치는 낮다."
+  },
+  {
+    "id": "M004",
+    "monster_name": "미믹",
+    "danger": 1,
+    "spawn_stage": "A → B → C",
+    "HP": 10,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "r1",
+    "reward_3rd": "0",
+    "prefab_name": "mimic_prefab",
+    "preview_name": "미믹",
+    "preview_text": "미믹",
+    "stage_description": "WORLD A → B → C",
+    "character_lines": [
+      { "character_id": "Hero", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Knight", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Saint", "line": "제, 제가 가져갈게요! 서, 성금으로!" }
+    ],
+    "dec": "미믹은 껍질 대신 버려진 상자나 가방을 등에 짊어지고 다니는 달팽이류 몬스터다.\n\n내부에 몸을 숨긴 채 긴 촉수와 낫 모양의 발톱으로 가까이 다가온 먹잇감을 덮친다.\n\n반짝이는 금속과 보석을 삼켜 껍질을 보강하는 습성이 있어 몸속에는 값비싼 물건이 다수 남아 있다. 사냥의 위험만큼 전리품의 가치도 매우 높다."
+  },
+  {
+    "id": "M005",
+    "monster_name": "골렘",
+    "danger": 1,
+    "spawn_stage": "A → B → C",
+    "HP": 14,
+    "gimmick": "없음",
+    "reward_1st": "b2",
+    "reward_2nd": "g1",
+    "reward_3rd": "r1",
+    "prefab_name": "golem_prefab",
+    "preview_name": "골렘",
+    "preview_text": "골렘",
+    "stage_description": "WORLD A → B → C",
+    "character_lines": [
+      { "character_id": "Hero", "line": "주인 몬스터야, 합을 맞추자고." },
+      { "character_id": "Knight", "line": "주인 몬스터야, 합을 맞추자고." },
+      { "character_id": "Saint", "line": "등에 있는 보석만 어떻게 안 될까요?" }
+    ],
+    "dec": "골렘은 마력이 깃든 암석과 광물이 뭉쳐 움직이는 인공 생명체다.\n\n단단한 몸을 이용해 침입자를 짓누르거나 집어 던지며, 파괴될 때까지 끈질기게 움직인다.\n\n몸을 이루는 석재와 광석은 희귀하지 않지만 채취량이 많다. 중심부의 마력핵도 연금과 마도구 제작에 쓰이기 때문에 전리품의 가치는 상당한 편이다."
+  },
+  {
+    "id": "M101",
+    "monster_name": "코볼트",
+    "danger": 1,
+    "spawn_stage": "D → E → L",
+    "HP": 5,
+    "gimmick": "없음",
+    "reward_1st": "g1",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "kobold_prefab",
+    "preview_name": "코볼트",
+    "preview_text": "코볼트",
+    "stage_description": "WORLD D → E → L",
+    "character_lines": [
+      { "character_id": "Hero", "line": "초보 모험가도 안 당하는 녀석이야." },
+      { "character_id": "Knight", "line": "초보 모험가도 안 당하는 녀석이야." },
+      { "character_id": "Saint", "line": "조금만 가지고 놀다 없애버리죠~" }
+    ],
+    "dec": "동굴 곳곳에 갱도를 파고 무리를 이루어 살아가는 소형 종족이다.\n\n스스로를 광부라 여기며, 반짝이는 돌이라면 가치도 구분하지 못한 채 닥치는 대로 캐내어 둥지에 쌓아 둔다.\n\n그러나 이들이 모으는 것은 대부분 황철석이나 불순물이 많은 저품질 광석이다. 사용하는 곡괭이와 방어구마저 조잡해 쓰러뜨려도 전리품의 가치는 거의 없다."
+  },
+  {
+    "id": "M102",
+    "monster_name": "스켈레톤",
+    "danger": 1,
+    "spawn_stage": "D → E → L",
+    "HP": 6,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1",
+    "reward_2nd": "r1",
+    "reward_3rd": "0",
+    "prefab_name": "skeleton_prefab",
+    "preview_name": "스켈레톤",
+    "preview_text": "스켈레톤",
+    "stage_description": "WORLD D → E → L",
+    "character_lines": [
+      { "character_id": "Hero", "line": "모험가였지만 이미 죽었으니 어쩔 수 없나." },
+      { "character_id": "Knight", "line": "모험가였지만 이미 죽었으니 어쩔 수 없나." },
+      { "character_id": "Saint", "line": "어, 언데드는 거부감이 느껴진다구요!" }
+    ],
+    "dec": "시체의 골수와 관절 사이에 뿌리내린 기생 균사가 썩은 근육과 힘줄을 대신해 뼈를 움직이는 감염체다.\n\n생전의 습관이 남은 듯 낡은 무기를 휘두르며 살아 있는 생물을 공격한다.\n\n대부분 던전에서 죽은 모험가의 유해에서 발생하기 때문에 갑옷과 무기, 소지품이 함께 남아 있는 경우가 많다. 전리품의 가치는 제법 높지만, 오랜 부식으로 상태에는 편차가 크다."
+  },
+  {
+    "id": "M103",
+    "monster_name": "바실리스크",
+    "danger": 1,
+    "spawn_stage": "D → E → L",
+    "HP": 7,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "basilisk_prefab",
+    "preview_name": "바실리스크",
+    "preview_text": "바실리스크",
+    "stage_description": "WORLD D → E → L",
+    "character_lines": [
+      { "character_id": "Hero", "line": "독샘 터뜨리면 네 몫에서 깐다!" },
+      { "character_id": "Knight", "line": "독샘 터뜨리면 네 몫에서 깐다!" },
+      { "character_id": "Saint", "line": "저 눈알 하나면 여관비에 판돈까지 나오겠네요." }
+    ],
+    "dec": "동굴과 오래된 폐허에 서식하는 대형 파충류다.\n\n안구에서 반사되는 강렬한 섬광과 강력한 신경독으로 먹잇감의 근육을 굳혀 움직이지 못하게 한 뒤, 단단한 턱과 날카로운 이빨로 사냥한다.\n\n독샘과 안구 결정체는 고급 해독제와 마도구 제작의 핵심 재료로 쓰인다. 광물질이 축적된 비늘과 송곳니까지 높은 값에 거래되기 때문에 손상 없이 사냥할수록 전리품의 가치가 매우 높다."
+  },
+  {
+    "id": "M104",
+    "monster_name": "미믹",
+    "danger": 1,
+    "spawn_stage": "D → E → L",
+    "HP": 10,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "b1",
+    "reward_3rd": "0",
+    "prefab_name": "mimic_prefab",
+    "preview_name": "미믹",
+    "preview_text": "미믹",
+    "stage_description": "WORLD D → E → L",
+    "character_lines": [
+      { "character_id": "Hero", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Knight", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Saint", "line": "제, 제가 가져갈게요! 서, 성금으로!" }
+    ],
+    "dec": "미믹은 껍질 대신 버려진 상자나 가방을 등에 짊어지고 다니는 달팽이류 몬스터다.\n\n내부에 몸을 숨긴 채 긴 촉수와 낫 모양의 발톱으로 가까이 다가온 먹잇감을 덮친다.\n\n반짝이는 금속과 보석을 삼켜 껍질을 보강하는 습성이 있어 몸속에는 값비싼 물건이 다수 남아 있다. 사냥의 위험만큼 전리품의 가치도 매우 높다."
+  },
+  {
+    "id": "M105",
+    "monster_name": "듀라한",
+    "danger": 1,
+    "spawn_stage": "D → E → L",
+    "HP": 13,
+    "gimmick": "없음",
+    "reward_1st": "g2",
+    "reward_2nd": "r1",
+    "reward_3rd": "b1",
+    "prefab_name": "dullahan_prefab",
+    "preview_name": "듀라한",
+    "preview_text": "듀라한",
+    "stage_description": "WORLD D → E → L",
+    "character_lines": [
+      { "character_id": "Hero", "line": "... " },
+      { "character_id": "Knight", "line": "... " },
+      { "character_id": "Saint", "line": "촉매석은 제 거예요! 제가 제일 먼저 비싸 보인다고 했거든요!" }
+    ],
+    "dec": "전사자의 갑옷 내부에 번식한 청염균이 가죽과 힘줄 같은 균사를 관절에 뻗어 갑옷을 움직이는 감염체다.\n\n균이 만들어낸 가연성 가스가 열린 목 부분으로 배출되며 푸른 불꽃처럼 타오른다.\n\n갑옷 자체는 낡았지만 회수 가능한 금속의 양이 많다. 가스를 점화하는 촉매석과 균사낭도 연금 및 마도구 재료로 쓰이기 때문에 전리품의 가치는 상당한 편이다."
+  },
+  {
+    "id": "M201",
+    "monster_name": "고블린",
+    "danger": 1,
+    "spawn_stage": "O → Z",
+    "HP": 4,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "goblin_prefab",
+    "preview_name": "고블린",
+    "preview_text": "고블린",
+    "stage_description": "WORLD O → Z",
+    "character_lines": [
+      { "character_id": "Hero", "line": "... " },
+      { "character_id": "Knight", "line": "... " },
+      { "character_id": "Saint", "line": "... " }
+    ],
+    "dec": "아무 곳에나 무리를 지어 사는 작고 겁 많은 종족이다.\n\n전투 능력은 형편없지만 함정과 매복을 이용해 행상인이나 부상당한 모험가를 습격하고, 값나가는 물건만 골라 챙기는 습성이 있다.\n\n훔친 금화와 보석, 마도구를 몸 곳곳의 주머니와 장신구에 숨겨 다니기 때문에 사냥 자체는 어렵지 않으면서도 전리품의 가치는 매우 높다."
+  },
+  {
+    "id": "M202",
+    "monster_name": "케르베로스",
+    "danger": 1,
+    "spawn_stage": "O → Z",
+    "HP": 7,
+    "gimmick": "없음",
+    "reward_1st": "r3",
+    "reward_2nd": "0",
+    "reward_3rd": "0",
+    "prefab_name": "cerberus_prefab",
+    "preview_name": "케르베로스",
+    "preview_text": "케르베로스",
+    "stage_description": "WORLD O → Z",
+    "character_lines": [
+      { "character_id": "Hero", "line": "... " },
+      { "character_id": "Knight", "line": "... " },
+      { "character_id": "Saint", "line": "... " }
+    ],
+    "dec": "태아 시기에 세 마리의 형제가 융합되어 하나의 몸과 세 개의 머리를 지닌 채 태어나는 대형 마견이다.\n\n각 머리가 독립적으로 주변을 감시하며, 목 안의 발화낭에서 뿜어낸 가연성 가스를 이빨의 마찰로 점화해 불길을 토해낸다.\n\n세 쌍의 송곳니와 질긴 가죽, 발화낭은 무기와 내화 장비의 재료로 쓰여 전리품의 가치는 높은 편이다."
+  },
+  {
+    "id": "M203",
+    "monster_name": "말로",
+    "danger": 1,
+    "spawn_stage": "O → Z",
+    "HP": 8,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "g2",
+    "reward_3rd": "b1",
+    "prefab_name": "skeleton_warrior_prefab",
+    "preview_name": "말로",
+    "preview_text": "말로",
+    "stage_description": "WORLD O → Z",
+    "character_lines": [
+      { "character_id": "Hero", "line": "나도 삐끗하면 저렇게…" },
+      { "character_id": "Knight", "line": "나도 삐끗하면 저렇게…" },
+      { "character_id": "Saint", "line": "꽤 베테랑 모험가였나 봐요." }
+    ],
+    "dec": "뼈와 갑옷 안쪽에 남은 축복의 결정이 신경 자극을 반복해, 육신이 사라진 뒤에도 생전의 전투 동작을 그대로 수행하는 특이한 스켈레톤이다.\n\n정교한 검술과 방어 기술을 구사한다.\n\n여러 상점과 공방에서 구입한 장비들은 오랜 전투로 손상되었음에도 전리품으로서 상당한 가치를 지닌다."
+  },
+  {
+    "id": "M204",
+    "monster_name": "미믹",
+    "danger": 1,
+    "spawn_stage": "O → Z",
+    "HP": 10,
+    "gimmick": "없음",
+    "reward_1st": "b1 g1 r1",
+    "reward_2nd": "g1",
+    "reward_3rd": "0",
+    "prefab_name": "mimic_prefab",
+    "preview_name": "미믹",
+    "preview_text": "미믹",
+    "stage_description": "WORLD O → Z",
+    "character_lines": [
+      { "character_id": "Hero", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Knight", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Saint", "line": "제, 제가 가져갈게요! 서, 성금으로!" }
+    ],
+    "dec": "미믹은 껍질 대신 버려진 상자나 가방을 등에 짊어지고 다니는 달팽이류 몬스터다.\n\n내부에 몸을 숨긴 채 긴 촉수와 낫 모양의 발톱으로 가까이 다가온 먹잇감을 덮친다.\n\n반짝이는 금속과 보석을 삼켜 껍질을 보강하는 습성이 있어 몸속에는 값비싼 물건이 다수 남아 있다. 사냥의 위험만큼 전리품의 가치도 매우 높다."
+  },
+  {
+    "id": "M205",
+    "monster_name": "드래곤",
+    "danger": 1,
+    "spawn_stage": "O → Z",
+    "HP": 14,
+    "gimmick": "없음",
+    "reward_1st": "r2",
+    "reward_2nd": "b1",
+    "reward_3rd": "g1",
+    "prefab_name": "dragon_prefab",
+    "preview_name": "드래곤",
+    "preview_text": "드래곤",
+    "stage_description": "WORLD O → Z",
+    "character_lines": [
+      { "character_id": "Hero", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Knight", "line": "가끔은~ 내 안위를 챙길 필요가 있지." },
+      { "character_id": "Saint", "line": "제, 제가 가져갈게요! 서, 성금으로!" }
+    ],
+    "dec": "수백 년 동안 열과 광물을 축적하며 성장한 고대의 비룡이다.\n\n검게 탄 비늘 아래의 거대한 발열기관에서 만들어낸 가스를 분사해 성벽과 갑옷마저 녹이는 백열의 화염을 토해낸다.\n\n비늘과 뿔, 심장핵은 그 자체로 국가의 보물이 될 만큼 값비싸다. 그러나 육체가 식기 전까지 주변을 불태우는 열기가 남아 있어 쓰러뜨린 뒤에도 함부로 접근해서는 안 된다."
   }
 ]

@@ -208,13 +208,17 @@ MonoBehaviour:
   nicknameText: {fileID: 1778786130762669093}
   currentCardRenderer: {fileID: 6956625691950727703}
   numberCardSprites:
-  - {fileID: 21300000, guid: 488b41774da35ff4cb80b341145a77b8, type: 3}
-  - {fileID: 21300000, guid: f53abb883915cb84196d6617490637af, type: 3}
-  - {fileID: 21300000, guid: be458ff58e8b32b478f8a3298b3d1f97, type: 3}
-  - {fileID: 21300000, guid: 763f84663cdcf79469fed925b38650ef, type: 3}
-  - {fileID: 21300000, guid: e67a72acb15b001458bf0210af6ca5dc, type: 3}
-  - {fileID: 21300000, guid: 7a4122f8db749ce41b265fdb45c6e320, type: 3}
-  cardBackSprite: {fileID: 21300000, guid: 997c93d864dc905478a313852b0c3b4a, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  - {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  cardFrontSprite: {fileID: 21300000, guid: 3a442e0b959199844bbf1e5b675ec098, type: 3}
+  cardBackSprite: {fileID: 21300000, guid: bddf681d482b2464abdf4f1f4c685345, type: 3}
+  cardOutlineSprite: {fileID: 21300000, guid: 8caaf161a418ff04c8656b7a8b404caa, type: 3}
+  currentCardOutlineRenderer: {fileID: 0}
+  currentCardValueLabel: {fileID: 0}
   selfIndicatorObject: {fileID: 7740312344840472343}
   selfIndicatorRenderer: {fileID: 4922409114092842915}
 --- !u!95 &583437597361773286
@@ -301,7 +305,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 8836061231690404382, guid: 30f56d413d0c0ce45bf1f0ea77079a51, type: 2}
+  - {fileID: 2180264, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -347,8 +351,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB2C9\uB124\uC784"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 30f56d413d0c0ce45bf1f0ea77079a51, type: 2}
-  m_sharedMaterial: {fileID: 8836061231690404382, guid: 30f56d413d0c0ce45bf1f0ea77079a51, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

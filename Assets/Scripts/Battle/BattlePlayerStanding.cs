@@ -30,11 +30,19 @@ public class BattlePlayerStanding : MonoBehaviour
     [Header("View - Current Card")]
     [SerializeField] private SpriteRenderer currentCardRenderer;
     [SerializeField] private Sprite[] numberCardSprites = new Sprite[6];
+    [SerializeField] private Sprite cardFrontSprite;
     [SerializeField] private Sprite cardBackSprite;
+    [SerializeField] private Sprite cardOutlineSprite;
+    [SerializeField] private SpriteRenderer currentCardOutlineRenderer;
+    [SerializeField] private TMP_Text currentCardValueLabel;
 
     [Header("View - Self Indicator")]
     [SerializeField] private GameObject selfIndicatorObject;
     [SerializeField] private SpriteRenderer selfIndicatorRenderer;
+
+    [Header("Focus Click")]
+    [SerializeField] private bool enableFocusClick = true;
+    [SerializeField] private bool autoAddClickCollider = true;
 
     public int PlayerIndex { get; private set; } = -1;
     public string PlayerKey { get; private set; } = string.Empty;
@@ -45,6 +53,7 @@ public class BattlePlayerStanding : MonoBehaviour
 
     private bool initialized;
     private bool selfIndicatorForceHidden;
+    private bool currentSubmittedCardFaceDown;
 
     private void Awake()
     {
@@ -54,11 +63,26 @@ public class BattlePlayerStanding : MonoBehaviour
         if (selfIndicatorObject == null && selfIndicatorRenderer != null)
             selfIndicatorObject = selfIndicatorRenderer.gameObject;
 
+        EnsureCurrentCardArtworkLayers();
         RefreshNicknameView();
         RefreshCurrentCardView();
         RefreshSelfIndicatorVisibility();
+        EnsureClickCollider();
     }
 
+    private void OnMouseUpAsButton()
+    {
+        if (!enableFocusClick)
+            return;
+
+        if (BattleFlowController.Instance != null && BattleFlowController.Instance.TryRequestKnightShiftBlameTarget(PlayerIndex))
+            return;
+
+        if (BattleFlowController.Instance != null && BattleFlowController.Instance.TryRequestDefenderTarget(PlayerIndex))
+            return;
+
+        BattleStandingFocusController.GetOrCreate().ToggleFocus(this);
+    }
     private void OnEnable()
     {
         if (initialized)
@@ -92,9 +116,11 @@ public class BattlePlayerStanding : MonoBehaviour
 
         initialized = true;
 
+        EnsureCurrentCardArtworkLayers();
         RefreshNicknameView();
         RefreshCurrentCardView();
         RefreshSelfIndicatorVisibility();
+        EnsureClickCollider();
 
         BattlePlayerStandingRegistry.Register(this);
     }
@@ -115,6 +141,11 @@ public class BattlePlayerStanding : MonoBehaviour
 
     public void SetSubmittedCard(int cardValue)
     {
+        SetSubmittedCard(cardValue, false);
+    }
+
+    public void SetSubmittedCard(int cardValue, bool faceDownForLocalPlayer)
+    {
         if (cardValue < 1 || cardValue > 6)
         {
             Debug.LogWarning($"{name}: 잘못된 카드 값입니다. ({cardValue})");
@@ -122,6 +153,7 @@ public class BattlePlayerStanding : MonoBehaviour
         }
 
         CurrentSubmittedCardValue = cardValue;
+        currentSubmittedCardFaceDown = faceDownForLocalPlayer;
         RefreshCurrentCardView();
         RefreshSelfIndicatorVisibility();
     }
@@ -129,6 +161,7 @@ public class BattlePlayerStanding : MonoBehaviour
     public void ClearSubmittedCard()
     {
         CurrentSubmittedCardValue = -1;
+        currentSubmittedCardFaceDown = false;
         RefreshCurrentCardView();
         RefreshSelfIndicatorVisibility();
     }
@@ -144,11 +177,24 @@ public class BattlePlayerStanding : MonoBehaviour
         selfIndicatorForceHidden = false;
         RefreshSelfIndicatorVisibility();
     }
-
     public void SetSelfIndicatorForceHidden(bool hidden)
     {
         selfIndicatorForceHidden = hidden;
         RefreshSelfIndicatorVisibility();
+    }
+
+    public Sprite GetNumberCardSprite(int cardValue)
+    {
+        int spriteIndex = cardValue - 1;
+        if (numberCardSprites == null ||
+            spriteIndex < 0 ||
+            spriteIndex >= numberCardSprites.Length)
+        {
+            return null;
+        }
+
+        Sprite sharedFront = GetSharedCardFrontSprite();
+        return sharedFront != null ? sharedFront : numberCardSprites[spriteIndex];
     }
 
     public void Play(BattleStandingAction action)
@@ -238,34 +284,31 @@ public class BattlePlayerStanding : MonoBehaviour
         if (currentCardRenderer == null)
             return;
 
+        EnsureCurrentCardArtworkLayers();
+
         if (CurrentSubmittedCardValue < 1 || CurrentSubmittedCardValue > 6)
         {
             currentCardRenderer.sprite = null;
             SetSpriteRendererAlpha(currentCardRenderer, 0f);
+            SetSpriteRendererAlpha(currentCardOutlineRenderer, 0f);
+            SetCurrentCardValueLabelVisible(false);
             return;
         }
 
-        Sprite targetSprite = null;
-
-        if (IsLocalPlayer)
-        {
-            int spriteIndex = CurrentSubmittedCardValue - 1;
-            if (numberCardSprites != null &&
-                spriteIndex >= 0 &&
-                spriteIndex < numberCardSprites.Length)
-            {
-                targetSprite = numberCardSprites[spriteIndex];
-            }
-        }
-        else
-        {
-            targetSprite = cardBackSprite;
-        }
+        bool showFaceValue = IsLocalPlayer && !currentSubmittedCardFaceDown;
+        Sprite targetSprite = showFaceValue ? GetSharedCardFrontSprite() : GetSharedCardBackSprite();
 
         currentCardRenderer.sprite = targetSprite;
         SetSpriteRendererAlpha(currentCardRenderer, targetSprite != null ? 1f : 0f);
-    }
 
+        if (currentCardOutlineRenderer != null)
+        {
+            currentCardOutlineRenderer.sprite = GetSharedCardOutlineSprite();
+            SetSpriteRendererAlpha(currentCardOutlineRenderer, targetSprite != null && currentCardOutlineRenderer.sprite != null ? 1f : 0f);
+        }
+
+        SetCurrentCardValueLabelVisible(showFaceValue && targetSprite != null);
+    }
     private void RefreshSelfIndicatorVisibility()
     {
         GameObject targetObject = selfIndicatorObject;
@@ -316,5 +359,116 @@ public class BattlePlayerStanding : MonoBehaviour
         Color c = renderer.color;
         c.a = alpha;
         renderer.color = c;
+    }
+    private Sprite GetSharedCardFrontSprite()
+    {
+        CardDrawPopupController cardPopup = CardDrawPopupController.GetAny();
+        if (cardPopup != null && cardPopup.CardFrontSprite != null)
+            return cardPopup.CardFrontSprite;
+
+        return cardFrontSprite;
+    }
+
+    private Sprite GetSharedCardBackSprite()
+    {
+        CardDrawPopupController cardPopup = CardDrawPopupController.GetAny();
+        if (cardPopup != null && cardPopup.CardBackSprite != null)
+            return cardPopup.CardBackSprite;
+
+        return cardBackSprite;
+    }
+
+    private Sprite GetSharedCardOutlineSprite()
+    {
+        CardDrawPopupController cardPopup = CardDrawPopupController.GetAny();
+        if (cardPopup != null && cardPopup.CardOutlineSprite != null)
+            return cardPopup.CardOutlineSprite;
+
+        return cardOutlineSprite;
+    }
+
+    private void EnsureCurrentCardArtworkLayers()
+    {
+        if (currentCardRenderer == null)
+            return;
+
+        if (currentCardOutlineRenderer == null)
+        {
+            Transform existingOutline = currentCardRenderer.transform.Find("Current Card Outline");
+            if (existingOutline != null)
+                currentCardOutlineRenderer = existingOutline.GetComponent<SpriteRenderer>();
+        }
+
+        if (currentCardOutlineRenderer == null)
+        {
+            GameObject outlineObject = new GameObject("Current Card Outline");
+            outlineObject.transform.SetParent(currentCardRenderer.transform, false);
+            outlineObject.transform.localPosition = Vector3.zero;
+            currentCardOutlineRenderer = outlineObject.AddComponent<SpriteRenderer>();
+        }
+
+        if (currentCardOutlineRenderer != null)
+        {
+            currentCardOutlineRenderer.sprite = GetSharedCardOutlineSprite();
+            currentCardOutlineRenderer.sortingLayerID = currentCardRenderer.sortingLayerID;
+            currentCardOutlineRenderer.sortingOrder = currentCardRenderer.sortingOrder + 1;
+        }
+
+        if (currentCardValueLabel == null)
+        {
+            Transform existingLabel = currentCardRenderer.transform.Find("Current Card Value Label");
+            if (existingLabel != null)
+                currentCardValueLabel = existingLabel.GetComponent<TMP_Text>();
+        }
+
+        if (currentCardValueLabel == null)
+        {
+            GameObject labelObject = new GameObject("Current Card Value Label");
+            labelObject.transform.SetParent(currentCardRenderer.transform, false);
+            labelObject.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            currentCardValueLabel = labelObject.AddComponent<TextMeshPro>();
+        }
+
+        if (currentCardValueLabel != null)
+        {
+            currentCardValueLabel.alignment = TextAlignmentOptions.Center;
+            currentCardValueLabel.color = new Color(0.08f, 0.075f, 0.06f, 1f);
+            currentCardValueLabel.fontSize = 3f;
+            currentCardValueLabel.fontStyle = FontStyles.Bold;
+            currentCardValueLabel.raycastTarget = false;
+
+            MeshRenderer labelRenderer = currentCardValueLabel.GetComponent<MeshRenderer>();
+            if (labelRenderer != null)
+            {
+                labelRenderer.sortingLayerID = currentCardRenderer.sortingLayerID;
+                labelRenderer.sortingOrder = currentCardRenderer.sortingOrder + 2;
+            }
+        }
+    }
+
+    private void SetCurrentCardValueLabelVisible(bool visible)
+    {
+        if (currentCardValueLabel == null)
+            return;
+
+        currentCardValueLabel.text = visible ? CurrentSubmittedCardValue.ToString() : string.Empty;
+        currentCardValueLabel.gameObject.SetActive(visible);
+    }
+    private void EnsureClickCollider()
+    {
+        if (!autoAddClickCollider)
+            return;
+
+        if (GetComponent<Collider2D>() != null)
+            return;
+
+        SpriteRenderer mainRenderer = GetComponent<SpriteRenderer>();
+        if (mainRenderer == null || mainRenderer.sprite == null)
+            return;
+
+        BoxCollider2D clickCollider = gameObject.AddComponent<BoxCollider2D>();
+        clickCollider.isTrigger = true;
+        clickCollider.size = mainRenderer.sprite.bounds.size;
+        clickCollider.offset = mainRenderer.sprite.bounds.center;
     }
 }

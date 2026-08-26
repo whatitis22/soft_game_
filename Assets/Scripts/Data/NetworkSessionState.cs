@@ -42,6 +42,12 @@ public class NetworkSessionState : NetworkBehaviour
     public NetworkVariable<FixedString64Bytes> CurrentMonsterStageName =
         new(new FixedString64Bytes("Grassland"), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<int> CurrentMapSelectionSeed =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<FixedString512Bytes> SelectedMonsterStageNames =
+        new(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<bool> IsRoundLocked =
         new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -63,6 +69,7 @@ public class NetworkSessionState : NetworkBehaviour
     public int MaxChatHistoryEntries => Mathf.Max(1, maxChatHistoryEntries);
     public float RoundLockHoldSeconds => Mathf.Max(0f, roundLockHoldSeconds);
     public string CurrentMonsterStageNameText => CurrentMonsterStageName.Value.ToString();
+    public string SelectedMonsterStageNamesText => SelectedMonsterStageNames.Value.ToString();
 
     private readonly System.Collections.Generic.List<NetworkPlayerState> roundLockPlayers =
         new System.Collections.Generic.List<NetworkPlayerState>();
@@ -161,6 +168,59 @@ public class NetworkSessionState : NetworkBehaviour
             : stageName.Trim();
 
         CurrentMonsterStageName.Value = new FixedString64Bytes(normalizedStageName);
+    }
+
+    public void ServerSetMapSelectionSeed(int seed)
+    {
+        if (!IsServer)
+            return;
+
+        CurrentMapSelectionSeed.Value = seed;
+    }
+
+    public void ServerSetCurrentStage(int stage)
+    {
+        if (!IsServer)
+            return;
+
+        CurrentStage.Value = Mathf.Max(0, stage);
+    }
+
+    public void ServerMarkMonsterStageSelected(string stageName)
+    {
+        if (!IsServer || string.IsNullOrWhiteSpace(stageName))
+            return;
+
+        string normalizedStageName = stageName.Trim();
+        if (HasSelectedMonsterStageName(normalizedStageName))
+            return;
+
+        string current = SelectedMonsterStageNamesText;
+        string next = string.IsNullOrWhiteSpace(current)
+            ? normalizedStageName
+            : current + "\n" + normalizedStageName;
+
+        SelectedMonsterStageNames.Value = new FixedString512Bytes(next);
+    }
+
+    public bool HasSelectedMonsterStageName(string stageName)
+    {
+        if (string.IsNullOrWhiteSpace(stageName))
+            return false;
+
+        string normalizedStageName = stageName.Trim();
+        string selectedNames = SelectedMonsterStageNamesText;
+        if (string.IsNullOrWhiteSpace(selectedNames))
+            return false;
+
+        string[] tokens = selectedNames.Split('\n');
+        for (int i = 0; i < tokens.Length; i++)
+        {
+            if (string.Equals(tokens[i].Trim(), normalizedStageName, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     public int GetInsuranceAmount(BattleCrystalColor color)

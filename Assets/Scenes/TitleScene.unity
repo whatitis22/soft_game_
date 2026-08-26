@@ -513,15 +513,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD504\uB808\uC2A4 \uC560\uB2C8 \uD0A4 \uD22C \uCEE8\uD2F0\uB274"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 30f56d413d0c0ce45bf1f0ea77079a51, type: 2}
-  m_sharedMaterial: {fileID: 8836061231690404382, guid: 30f56d413d0c0ce45bf1f0ea77079a51, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

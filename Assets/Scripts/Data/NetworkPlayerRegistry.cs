@@ -95,6 +95,27 @@ public static class NetworkPlayerRegistry
         return false;
     }
 
+    public static bool TryGetByPlayerIndex(int playerIndex, out NetworkPlayerState player)
+    {
+        Compact();
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            NetworkPlayerState candidate = players[i];
+            if (!IsAvailable(candidate))
+                continue;
+
+            if (candidate.PlayerIndex.Value == playerIndex)
+            {
+                player = candidate;
+                return true;
+            }
+        }
+
+        player = null;
+        return false;
+    }
+
     public static int CountSpawnedPlayers()
     {
         int count = 0;

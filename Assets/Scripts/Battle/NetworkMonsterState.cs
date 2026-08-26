@@ -95,6 +95,7 @@ public class NetworkMonsterState : NetworkBehaviour
     {
         CurrentHp.OnValueChanged += HandleCurrentHpChanged;
         MaxHp.OnValueChanged += HandleMaxHpChanged;
+        MonsterName.OnValueChanged += HandleMonsterNameChanged;
         DeathAnimationSequence.OnValueChanged += HandleDeathAnimationSequenceChanged;
     }
 
@@ -102,6 +103,7 @@ public class NetworkMonsterState : NetworkBehaviour
     {
         CurrentHp.OnValueChanged -= HandleCurrentHpChanged;
         MaxHp.OnValueChanged -= HandleMaxHpChanged;
+        MonsterName.OnValueChanged -= HandleMonsterNameChanged;
         DeathAnimationSequence.OnValueChanged -= HandleDeathAnimationSequenceChanged;
     }
 
@@ -124,6 +126,11 @@ public class NetworkMonsterState : NetworkBehaviour
         ApplyNetworkValuesToState(resetDeathState: CurrentHp.Value > 0);
     }
 
+    private void HandleMonsterNameChanged(FixedString128Bytes previousValue, FixedString128Bytes newValue)
+    {
+        ApplyMonsterNameToState();
+    }
+
     private void HandleDeathAnimationSequenceChanged(int previousValue, int newValue)
     {
         if (newValue <= previousValue)
@@ -142,7 +149,17 @@ public class NetworkMonsterState : NetworkBehaviour
 
         applyingNetworkState = true;
         monsterState.ApplyNetworkState(MaxHp.Value, CurrentHp.Value, hpTextObjectName, resetDeathState);
+        ApplyMonsterNameToState();
         applyingNetworkState = false;
+    }
+
+    private void ApplyMonsterNameToState()
+    {
+        CacheReferences();
+        if (monsterState == null)
+            return;
+
+        monsterState.SetDisplayName(MonsterName.Value.ToString());
     }
 
     private bool CanServerWrite()

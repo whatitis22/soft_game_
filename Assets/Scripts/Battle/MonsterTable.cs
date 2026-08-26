@@ -5,17 +5,57 @@ using UnityEngine;
 [Serializable]
 public class MonsterData
 {
+    private const string MissingCharacterLine = "... ";
+
     public string id;
     public string monster_name;
     public int danger;
     public string spawn_stage;
     public int HP;
+    public string gimmick;
     public string reward_1st;
     public string reward_2nd;
     public string reward_3rd;
     public string prefab_name;
     public string preview_name;
+    public string preview_text;
+    public string stage_description;
+    public MonsterCharacterLine[] character_lines;
     public string dec;
+
+    public string GetCharacterLine(JobType job)
+    {
+        return GetCharacterLine(job.ToString());
+    }
+
+    public string GetCharacterLine(string characterId)
+    {
+        if (string.IsNullOrWhiteSpace(characterId) || character_lines == null)
+            return MissingCharacterLine;
+
+        for (int i = 0; i < character_lines.Length; i++)
+        {
+            MonsterCharacterLine characterLine = character_lines[i];
+            if (characterLine == null)
+                continue;
+
+            if (!string.Equals(characterLine.character_id, characterId, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return string.IsNullOrWhiteSpace(characterLine.line)
+                ? MissingCharacterLine
+                : characterLine.line;
+        }
+
+        return MissingCharacterLine;
+    }
+}
+
+[Serializable]
+public class MonsterCharacterLine
+{
+    public string character_id;
+    public string line;
 }
 
 [Serializable]

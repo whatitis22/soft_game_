@@ -29,6 +29,11 @@ public class BattlePlayerSlots : MonoBehaviour
     private readonly Dictionary<NetworkPlayerState, NetworkVariable<int>.OnValueChangedDelegate> submittedCardHandlers
         = new Dictionary<NetworkPlayerState, NetworkVariable<int>.OnValueChangedDelegate>();
 
+    private readonly Dictionary<NetworkPlayerState, NetworkVariable<bool>.OnValueChangedDelegate> submittedCardLockHandlers
+        = new Dictionary<NetworkPlayerState, NetworkVariable<bool>.OnValueChangedDelegate>();
+
+    private Coroutine spawnRoutine;
+
     public IReadOnlyDictionary<int, BattlePlayerStanding> SpawnedStandings => spawnedStandings;
 
     private IEnumerator Start()
@@ -36,7 +41,24 @@ public class BattlePlayerSlots : MonoBehaviour
         if (!spawnOnStart)
             yield break;
 
-        yield return SpawnWhenPlayersReady();
+        spawnRoutine = StartCoroutine(SpawnWhenPlayersReady());
+        yield return spawnRoutine;
+        spawnRoutine = null;
+    }
+
+    public void EnsureSpawnedForBattleSceneEntry()
+    {
+        List<NetworkPlayerState> players = NetworkPlayerRegistry.GetSpawnedPlayers();
+        if (HasSpawnablePlayers(players))
+        {
+            SpawnFromPlayers(players);
+            return;
+        }
+
+        if (spawnRoutine != null)
+            StopCoroutine(spawnRoutine);
+
+        spawnRoutine = StartCoroutine(SpawnWhenPlayersReady());
     }
 
     private IEnumerator SpawnWhenPlayersReady()
@@ -249,6 +271,14 @@ public class BattlePlayerSlots : MonoBehaviour
 
         player.SubmittedCard.OnValueChanged += handler;
         submittedCardHandlers[player] = handler;
+
+        NetworkVariable<bool>.OnValueChangedDelegate lockHandler = (previousValue, newValue) =>
+        {
+            ApplySubmittedCardVisual(player);
+        };
+
+        player.IsSubmittedCardLocked.OnValueChanged += lockHandler;
+        submittedCardLockHandlers[player] = lockHandler;
     }
 
     private void UnsubscribeAllPlayerStateEvents()
@@ -263,6 +293,16 @@ public class BattlePlayerSlots : MonoBehaviour
         }
 
         submittedCardHandlers.Clear();
+
+        foreach (var pair in submittedCardLockHandlers)
+        {
+            if (pair.Key == null)
+                continue;
+
+            pair.Key.IsSubmittedCardLocked.OnValueChanged -= pair.Value;
+        }
+
+        submittedCardLockHandlers.Clear();
     }
 
     private void ApplySubmittedCardVisual(NetworkPlayerState player)
@@ -279,7 +319,7 @@ public class BattlePlayerSlots : MonoBehaviour
 
         if (submittedCard >= 1 && submittedCard <= 6)
         {
-            standing.SetSubmittedCard(submittedCard);
+            standing.SetSubmittedCard(submittedCard, player.IsSubmittedCardLocked.Value);
         }
         else
         {

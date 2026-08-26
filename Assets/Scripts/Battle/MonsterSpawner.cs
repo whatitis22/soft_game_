@@ -116,8 +116,17 @@ public class MonsterSpawner : MonoBehaviour
             }
         }
 
-        if (!TryGetMonsterPrefab(monsterData.prefab_name, out GameObject prefab))
-            return false;
+        bool usesTextPlaceholderPrefab = false;
+        if (!TryGetMonsterPrefab(monsterData.prefab_name, out GameObject prefab, false))
+        {
+            if (!TryGetFallbackMonsterPrefab(out prefab))
+            {
+                Debug.LogWarning($"MonsterSpawner: '{monsterData.monster_name}'({monsterData.id})에 사용할 몬스터 프리펩이 없습니다.");
+                return false;
+            }
+
+            usesTextPlaceholderPrefab = true;
+        }
 
         if (!TryGetSpawnPoint(out Transform spawnPoint))
             return false;
@@ -143,7 +152,9 @@ public class MonsterSpawner : MonoBehaviour
 
         Transform parent = useNetworkSpawn ? null : spawnedMonsterParent != null ? spawnedMonsterParent : null;
         currentMonsterInstance = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation, parent);
-        currentMonsterInstance.name = $"{prefab.name}_{monsterData.id}";
+        currentMonsterInstance.name = usesTextPlaceholderPrefab
+            ? $"text_placeholder_{monsterData.id}"
+            : $"{prefab.name}_{monsterData.id}";
         currentMonsterData = monsterData;
         currentMonsterState = GetOrCreateMonsterState(currentMonsterInstance);
         currentNetworkMonsterState = currentMonsterInstance.GetComponent<NetworkMonsterState>();
@@ -157,7 +168,11 @@ public class MonsterSpawner : MonoBehaviour
         if (useNetworkSpawn)
             currentMonsterInstance.GetComponent<NetworkObject>().Spawn();
 
-        Debug.Log($"MonsterSpawner: {monsterData.monster_name}({monsterData.id}) 소환 완료");
+        if (usesTextPlaceholderPrefab)
+            Debug.Log($"MonsterSpawner: {monsterData.monster_name}({monsterData.id}) 텍스트 플레이스홀더 소환 완료");
+        else
+            Debug.Log($"MonsterSpawner: {monsterData.monster_name}({monsterData.id}) 소환 완료");
+
         return true;
     }
 
@@ -225,7 +240,8 @@ public class MonsterSpawner : MonoBehaviour
         if (monsterData == null)
             return false;
 
-        if (!TryGetMonsterPrefab(monsterData.prefab_name, out GameObject prefab, false))
+        if (!TryGetMonsterPrefab(monsterData.prefab_name, out GameObject prefab, false)
+            && !TryGetFallbackMonsterPrefab(out prefab))
             return false;
 
         if (ShouldUseNetworkSpawn())
@@ -422,6 +438,26 @@ public class MonsterSpawner : MonoBehaviour
 
         if (logWarnings)
             Debug.LogWarning($"MonsterSpawner: prefab_name '{prefabName}'에 해당하는 프리펩 참조가 없습니다.");
+
+        return false;
+    }
+
+    private bool TryGetFallbackMonsterPrefab(out GameObject prefab)
+    {
+        prefab = null;
+
+        if (monsterPrefabs == null)
+            return false;
+
+        for (int i = 0; i < monsterPrefabs.Length; i++)
+        {
+            MonsterPrefabEntry entry = monsterPrefabs[i];
+            if (entry == null || entry.prefab == null)
+                continue;
+
+            prefab = entry.prefab;
+            return true;
+        }
 
         return false;
     }

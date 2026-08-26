@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 878a9634c288fb44b86865beff58a21f, type: 3}
+  m_Name: Hero 8
+  m_EditorClassIdentifier: Assembly-CSharp::JobDefinition
+  jobType: 9
+  displayName: "\uB514\uD39C\uB354(\uB124\uD2B8\uB77C)"
+  portrait: {fileID: 21300000, guid: 4795d7ce855304f429063010697d4630, type: 3}
+  lobbyStandingImage: {fileID: 21300000, guid: d4eb8810f6a11184c8b150c61758156c, type: 3}
+  battlePlayerStandingPrefab: {fileID: 3457665842143005516, guid: b737bdefa685acd45a1c2ed6e38fabb1, type: 3}
+  shortDescription: "\uACE0\uAC1D\uACFC \uBE5A\uC744 \uAD00\uB9AC\uD558\uB294 \uBC29\uC5B4\uD615 \uC9C1\uC5C5"
+  detailDescription: "\uB300\uBD80\uB85C \uD30C\uD2F0\uC6D0\uC744 \uACE0\uAC1D\uC73C\uB85C \uC9C0\uC815\uD558\uACE0 \uBAAC\uC2A4\uD130 \uACF5\uACA9\uC744 \uB300\uC2E0 \uBC1B\uC2B5\uB2C8\uB2E4. \uACE0\uAC1D\uC774 \uBCF4\uC0C1\uC744 \uC5BB\uC73C\uBA74 \uBE5A\uC774 \uC99D\uAC00\uD558\uACE0, \uC2A4\uD14C\uC774\uC9C0 \uC885\uB8CC \uC2DC \uAC00\uC7A5 \uBE5A\uC774 \uD070 \uACE0\uAC1D\uC5D0\uAC8C\uC11C \uC815\uC0B0\uD569\uB2C8\uB2E4."

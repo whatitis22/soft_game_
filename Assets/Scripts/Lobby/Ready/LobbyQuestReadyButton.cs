@@ -117,6 +117,8 @@ public class LobbyQuestReadyButton : MonoBehaviour
 
     private void StartSceneLoad()
     {
+        NetworkSessionState.Instance?.ServerSetMapSelectionSeed(UnityEngine.Random.Range(1, int.MaxValue));
+
         var status = NetworkManager.Singleton.SceneManager.LoadScene(targetSceneName, LoadSceneMode.Single);
 
         if (status != SceneEventProgressStatus.Started)

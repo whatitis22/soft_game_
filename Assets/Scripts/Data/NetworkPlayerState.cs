@@ -1,4 +1,4 @@
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -30,6 +30,24 @@ public class NetworkPlayerState : NetworkBehaviour
 
     public NetworkVariable<int> SubmittedCard =
         new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<bool> IsSubmittedCardLocked =
+        new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<bool> IsDefenderCustomer =
+        new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> DefenderDebt =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<bool> DefenderDebtBlockedThisStage =
+        new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> DefenderActiveProtectorIndex =
+        new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> DefenderPendingDebt =
+        new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("개인 비공개 상태")]
     // bit 0 = 카드1, bit 1 = 카드2 ... bit 5 = 카드6 >> 111010(4, 6 번 카드 사용)
@@ -90,6 +108,8 @@ public class NetworkPlayerState : NetworkBehaviour
         IsReady.Value = false;
 
         SubmittedCard.Value = -1;
+        IsSubmittedCardLocked.Value = false;
+        ServerClearDefenderCustomerState(true);
     }
 
 
@@ -147,6 +167,89 @@ public class NetworkPlayerState : NetworkBehaviour
         return removedAmount;
     }
 
+    public void ServerSetDefenderCustomer(bool isCustomer)
+    {
+        if (!IsServer)
+            return;
+
+        IsDefenderCustomer.Value = isCustomer;
+        if (!isCustomer)
+        {
+            DefenderDebt.Value = 0;
+            DefenderDebtBlockedThisStage.Value = false;
+            DefenderActiveProtectorIndex.Value = -1;
+            DefenderPendingDebt.Value = 0;
+        }
+    }
+
+    public void ServerAddDefenderDebt(int amount)
+    {
+        if (!IsServer || amount <= 0 || !IsDefenderCustomer.Value || DefenderDebtBlockedThisStage.Value)
+            return;
+
+        DefenderDebt.Value = Mathf.Max(0, DefenderDebt.Value + amount);
+    }
+
+    public void ServerSetDefenderDebt(int amount)
+    {
+        if (!IsServer)
+            return;
+
+        DefenderDebt.Value = Mathf.Max(0, amount);
+    }
+
+    public void ServerSetDefenderDebtBlockedThisStage(bool blocked)
+    {
+        if (!IsServer)
+            return;
+
+        DefenderDebtBlockedThisStage.Value = blocked;
+    }
+
+    public void ServerSetDefenderActiveProtector(int playerIndex)
+    {
+        if (!IsServer)
+            return;
+
+        DefenderActiveProtectorIndex.Value = playerIndex;
+    }
+
+    public void ServerAddDefenderPendingDebt(int amount)
+    {
+        if (!IsServer || amount <= 0)
+            return;
+
+        DefenderPendingDebt.Value = Mathf.Max(0, DefenderPendingDebt.Value + amount);
+    }
+
+    public void ServerClearDefenderPendingDebt()
+    {
+        if (!IsServer)
+            return;
+
+        DefenderPendingDebt.Value = 0;
+    }
+
+    public void ServerClearDefenderRoundProtection()
+    {
+        if (!IsServer)
+            return;
+
+        DefenderActiveProtectorIndex.Value = -1;
+    }
+
+    public void ServerClearDefenderCustomerState(bool clearStageBlock)
+    {
+        if (!IsServer)
+            return;
+
+        IsDefenderCustomer.Value = false;
+        DefenderDebt.Value = 0;
+        DefenderActiveProtectorIndex.Value = -1;
+        DefenderPendingDebt.Value = 0;
+        if (clearStageBlock)
+            DefenderDebtBlockedThisStage.Value = false;
+    }
     public void ServerSetJob(JobType newJob)
     {
         if (!IsServer)
@@ -214,6 +317,16 @@ public class NetworkPlayerState : NetworkBehaviour
         RemainingNumberCardsMask.Value = (byte)(RemainingNumberCardsMask.Value | mask);
     }
 
+    public void ServerResetNumberCards()
+    {
+        if (!IsServer)
+            return;
+
+        RemainingNumberCardsMask.Value = 0b0011_1111;
+        SubmittedCard.Value = -1;
+        IsSubmittedCardLocked.Value = false;
+    }
+
     public void ServerSetReady(bool ready)
     {
         if (!IsServer)
@@ -229,11 +342,15 @@ public class NetworkPlayerState : NetworkBehaviour
 
         NetworkSessionState.Instance?.ServerResetRoundLock();
         SubmittedCard.Value = -1;
+        IsSubmittedCardLocked.Value = false;
     }
 
     public void ServerCancelSubmittedCard()
     {
         if (!IsServer)
+            return;
+
+        if (IsSubmittedCardLocked.Value)
             return;
 
         if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
@@ -245,6 +362,23 @@ public class NetworkPlayerState : NetworkBehaviour
 
         NetworkSessionState.Instance?.ServerResetRoundLock();
         SubmittedCard.Value = -1;
+    }
+
+    public bool ServerForceSubmitNumberCard(int cardValue, bool lockSubmission)
+    {
+        if (!IsServer || cardValue < 1 || cardValue > 6)
+            return false;
+
+        if (SubmittedCard.Value >= 1 && SubmittedCard.Value <= 6)
+            return false;
+
+        if (!HasNumberCard(cardValue))
+            return false;
+
+        SubmittedCard.Value = cardValue;
+        IsSubmittedCardLocked.Value = lockSubmission;
+        ServerConsumeNumberCard(cardValue);
+        return true;
     }
 
     [Rpc(SendTo.Server)]
@@ -292,6 +426,58 @@ public class NetworkPlayerState : NetworkBehaviour
         ServerConsumeNumberCard(cardValue);
 
         Debug.Log($"PlayerIndex={PlayerIndex.Value} / Card={cardValue} 제출");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestUseSaintRevelationRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "자신의 액티브 스킬만 사용할 수 있습니다.");
+            return;
+        }
+
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+        {
+            SendCommandFeedback(senderId, "라운드가 잠겨 계시를 사용할 수 없습니다.");
+            return;
+        }
+
+        if (BattleFlowController.Instance == null ||
+            !BattleFlowController.Instance.ServerTryUseSaintRevelation(this))
+        {
+            SendCommandFeedback(senderId, "계시를 사용할 수 없습니다.");
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestUseDefenderLoanRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (senderId != OwnerClientId)
+        {
+            SendCommandFeedback(senderId, "Defender skill can only be used by its owner.");
+            return;
+        }
+
+        if (NetworkSessionState.Instance != null && NetworkSessionState.Instance.IsRoundLocked.Value)
+        {
+            SendCommandFeedback(senderId, "The round is locked.");
+            return;
+        }
+
+        if (BattleFlowController.Instance == null ||
+            !BattleFlowController.Instance.ServerTryBeginDefenderLoan(this))
+        {
+            SendCommandFeedback(senderId, "Loan cannot be used.");
+        }
     }
 
     [Rpc(SendTo.Server)]
