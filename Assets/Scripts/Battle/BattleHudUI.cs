@@ -14,6 +14,7 @@ public class BattleHudUI : MonoBehaviour
     public static BattleHudUI Instance { get; private set; }
 
     private const string TargetSceneName = "GameScene";
+    private const int StageEncounterCount = 4;
 
     [Header("Layout")]
     [SerializeField] private Vector2 playerPanelSize = new Vector2(348f, 110f);
@@ -28,6 +29,10 @@ public class BattleHudUI : MonoBehaviour
     [SerializeField] private Sprite insuranceJarSprite;
     [SerializeField] private Sprite itemBagSprite;
     [SerializeField] private Sprite monsterBookSprite;
+    [SerializeField] private Sprite stageProgressIndicatorSprite;
+    [SerializeField] private Sprite stageProgressBarSprite;
+    [SerializeField] private Sprite stageProgressNormalMonsterSprite;
+    [SerializeField] private Sprite stageProgressBossMonsterSprite;
 
     private RectTransform root;
     private TMP_Text nicknameText;
@@ -219,10 +224,10 @@ public class BattleHudUI : MonoBehaviour
         DisableDirectChildren(stageRoot, "Divider");
         CreateDivider(stageRoot, new Vector2(0.08f, 0.32f), new Vector2(0.92f, 0.32f), 2f);
 
-        string[] labels = { "1-1", "1-2", "1-3", "1-4", "1-Boss" };
+        string[] labels = { "1-1", "1-2", "1-3", "1-Boss" };
         for (int i = 0; i < labels.Length; i++)
         {
-            float x = Mathf.Lerp(0.08f, 0.92f, i / 4f);
+            float x = GetStageNodeAnchorX(i);
 
             RectTransform node = GetOrCreatePanel($"Stage Node {i + 1}", stageRoot);
             node.anchorMin = new Vector2(x, 0.08f);
@@ -237,11 +242,13 @@ public class BattleHudUI : MonoBehaviour
             label.pivot = new Vector2(0.5f, 0.5f);
             label.anchoredPosition = Vector2.zero;
             label.sizeDelta = new Vector2(i == labels.Length - 1 ? 72f : 58f, 44f);
+            ApplyStageLabelSprite(label, i == labels.Length - 1);
 
             TMP_Text labelText = GetOrCreateText("Text", label, labels[i], 20f, TextAlignmentOptions.Center);
             Stretch(labelText.rectTransform, 0f);
         }
 
+        HideExtraStageRouteEntries(stageRoot, labels.Length);
         stageMarker = CreateStageMarker(stageRoot);
         SetStageMarkerIndex(0);
     }
@@ -373,6 +380,9 @@ public class BattleHudUI : MonoBehaviour
         insuranceBlueText = FindText("Blue Crystal Count", droppedCrystals);
 
         stageMarker = FindRect("Current Stage Marker");
+        ApplyStageProgressIndicatorSprite(stageMarker);
+        ApplyStageProgressBarSprite(FindRect("Stage Route Line"));
+        ConfigureAuthoredStageRoute();
         monsterNameText = FindText("Name");
         monsterHpText = FindText("HP");
         monsterDescriptionText = FindText("Description");
@@ -457,15 +467,7 @@ public class BattleHudUI : MonoBehaviour
         RectTransform marker = CreateRect("Current Stage Marker", parent);
         marker.pivot = new Vector2(0.5f, 0f);
         marker.sizeDelta = new Vector2(38f, 34f);
-
-        TMP_Text triangle = marker.gameObject.AddComponent<TextMeshProUGUI>();
-        triangle.text = "▲";
-        triangle.fontSize = 34f;
-        triangle.fontStyle = FontStyles.Bold;
-        triangle.alignment = TextAlignmentOptions.Center;
-        triangle.color = Color.black;
-        triangle.raycastTarget = false;
-        triangle.textWrappingMode = TextWrappingModes.NoWrap;
+        ApplyStageProgressIndicatorSprite(marker);
         marker.SetAsLastSibling();
 
         return marker;
@@ -476,15 +478,22 @@ public class BattleHudUI : MonoBehaviour
         if (stageMarker == null)
             return;
 
-        if (authoredLayout)
-            return;
+        int clampedIndex = Mathf.Clamp(stageIndex, 0, StageEncounterCount - 1);
+        RectTransform stageLabel = FindRect($"Stage Label {clampedIndex + 1}");
+        if (stageLabel != null && stageLabel.parent == stageMarker.parent)
+        {
+            Vector2 markerPosition = stageMarker.anchoredPosition;
+            markerPosition.x = stageLabel.anchoredPosition.x;
+            stageMarker.anchoredPosition = markerPosition;
+        }
+        else
+        {
+            float x = GetStageNodeAnchorX(clampedIndex);
+            stageMarker.anchorMin = new Vector2(x, stageMarker.anchorMin.y);
+            stageMarker.anchorMax = new Vector2(x, stageMarker.anchorMax.y);
+            stageMarker.anchoredPosition = new Vector2(0f, stageMarker.anchoredPosition.y);
+        }
 
-        int clampedIndex = Mathf.Clamp(stageIndex, 0, 4);
-        float x = Mathf.Lerp(0.08f, 0.92f, clampedIndex / 4f);
-
-        stageMarker.anchorMin = new Vector2(x, 0.34f);
-        stageMarker.anchorMax = new Vector2(x, 0.34f);
-        stageMarker.anchoredPosition = Vector2.zero;
         stageMarker.SetAsLastSibling();
     }
 
@@ -497,7 +506,56 @@ public class BattleHudUI : MonoBehaviour
         if (currentStage <= 0)
             return 0;
 
-        return Mathf.Clamp(currentStage - 1, 0, 4);
+        return Mathf.Clamp(currentStage - 1, 0, StageEncounterCount - 1);
+    }
+
+    private float GetStageNodeAnchorX(int stageIndex)
+    {
+        return Mathf.Lerp(0.08f, 0.92f, stageIndex / (float)(StageEncounterCount - 1));
+    }
+
+    private void ConfigureAuthoredStageRoute()
+    {
+        Transform stageRoot = FindChildRecursive(root, "Stage Route");
+        if (stageRoot == null)
+            return;
+
+        string[] labels = { "1-1", "1-2", "1-3", "1-Boss" };
+        for (int i = 0; i < labels.Length; i++)
+        {
+            ConfigureAuthoredStageLabel(stageRoot, $"Stage Label {i + 1}", labels[i], i == labels.Length - 1);
+            SetStageRouteEntryActive(stageRoot, $"Stage Node {i + 1}", true);
+        }
+
+        HideExtraStageRouteEntries(stageRoot, labels.Length);
+    }
+
+    private void ConfigureAuthoredStageLabel(Transform stageRoot, string entryName, string labelText, bool isBossLabel)
+    {
+        Transform entry = FindChildRecursive(stageRoot, entryName);
+        if (entry == null)
+            return;
+
+        entry.gameObject.SetActive(true);
+        RectTransform rect = entry.GetComponent<RectTransform>();
+        ApplyStageLabelSprite(rect, isBossLabel);
+        SetText(entry.GetComponentInChildren<TMP_Text>(true), labelText);
+    }
+
+    private void HideExtraStageRouteEntries(Transform stageRoot, int visibleEntryCount)
+    {
+        for (int i = visibleEntryCount + 1; i <= 5; i++)
+        {
+            SetStageRouteEntryActive(stageRoot, $"Stage Node {i}", false);
+            SetStageRouteEntryActive(stageRoot, $"Stage Label {i}", false);
+        }
+    }
+
+    private void SetStageRouteEntryActive(Transform stageRoot, string entryName, bool active)
+    {
+        Transform entry = FindChildRecursive(stageRoot, entryName);
+        if (entry != null)
+            entry.gameObject.SetActive(active);
     }
 
     private RectTransform CreatePanel(string name, Transform parent)
@@ -665,7 +723,8 @@ public class BattleHudUI : MonoBehaviour
             ? "Vertical Divider"
             : "Horizontal Divider";
 
-        if (parent != null && string.Equals(parent.name, "Stage Route", System.StringComparison.Ordinal))
+        bool isStageRouteLine = parent != null && string.Equals(parent.name, "Stage Route", System.StringComparison.Ordinal);
+        if (isStageRouteLine)
             dividerName = "Stage Route Line";
 
         RectTransform divider = GetOrCreateRect(dividerName, parent);
@@ -674,9 +733,19 @@ public class BattleHudUI : MonoBehaviour
         divider.offsetMin = Vector2.zero;
         divider.offsetMax = Vector2.zero;
 
-        Image image = divider.gameObject.AddComponent<Image>();
-        image.color = lineColor;
-        image.raycastTarget = false;
+        Image image = divider.GetComponent<Image>();
+        if (image == null)
+            image = divider.gameObject.AddComponent<Image>();
+
+        if (isStageRouteLine)
+        {
+            ApplyStageProgressBarSprite(divider);
+        }
+        else
+        {
+            image.color = lineColor;
+            image.raycastTarget = false;
+        }
 
         if (Mathf.Approximately(anchorStart.x, anchorEnd.x))
             divider.sizeDelta = new Vector2(thickness, 0f);
@@ -836,6 +905,78 @@ public class BattleHudUI : MonoBehaviour
             outline.enabled = false;
     }
 
+    private void ApplyStageProgressIndicatorSprite(RectTransform marker)
+    {
+        if (marker == null)
+            return;
+
+        TMP_Text markerText = marker.GetComponent<TMP_Text>();
+        if (markerText != null)
+            DestroyGeneratedComponent(markerText);
+
+        Image image = marker.GetComponent<Image>();
+        if (image == null)
+            image = marker.gameObject.AddComponent<Image>();
+
+        Sprite sprite = GetStageProgressIndicatorSprite();
+        image.sprite = sprite;
+        image.color = sprite != null ? Color.white : Color.clear;
+        image.type = Image.Type.Simple;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+    }
+
+    private void ApplyStageProgressBarSprite(RectTransform bar)
+    {
+        if (bar == null)
+            return;
+
+        Image image = bar.GetComponent<Image>();
+        if (image == null)
+            image = bar.gameObject.AddComponent<Image>();
+
+        Sprite sprite = GetStageProgressBarSprite();
+        image.sprite = sprite;
+        image.color = sprite != null ? Color.white : lineColor;
+        image.type = Image.Type.Simple;
+        image.preserveAspect = false;
+        image.raycastTarget = false;
+    }
+
+    private void ApplyStageLabelSprite(RectTransform label, bool isBossLabel)
+    {
+        if (label == null)
+            return;
+
+        Image image = label.GetComponent<Image>();
+        if (image == null)
+            image = label.gameObject.AddComponent<Image>();
+
+        Sprite sprite = isBossLabel ? GetStageProgressBossMonsterSprite() : GetStageProgressNormalMonsterSprite();
+        image.sprite = sprite;
+        image.color = sprite != null ? Color.white : panelColor;
+        image.type = Image.Type.Simple;
+        image.preserveAspect = false;
+        image.raycastTarget = false;
+
+        Outline outline = label.GetComponent<Outline>();
+        if (outline != null)
+            outline.enabled = sprite == null;
+    }
+
+    private void DestroyGeneratedComponent(Component component)
+    {
+        if (component == null)
+            return;
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+            DestroyImmediate(component);
+        else
+#endif
+            Destroy(component);
+    }
+
     private Sprite GetMonsterBookSprite()
     {
         if (monsterBookSprite != null)
@@ -843,6 +984,54 @@ public class BattleHudUI : MonoBehaviour
 
 #if UNITY_EDITOR
         return AssetDatabase.LoadAssetAtPath<Sprite>("Assets/souce/main_sources/main_monsterBook.png");
+#else
+        return null;
+#endif
+    }
+
+    private Sprite GetStageProgressIndicatorSprite()
+    {
+        if (stageProgressIndicatorSprite != null)
+            return stageProgressIndicatorSprite;
+
+#if UNITY_EDITOR
+        return AssetDatabase.LoadAssetAtPath<Sprite>("Assets/souce/main_sources/main_stageProgress_indicator.png");
+#else
+        return null;
+#endif
+    }
+
+    private Sprite GetStageProgressBarSprite()
+    {
+        if (stageProgressBarSprite != null)
+            return stageProgressBarSprite;
+
+#if UNITY_EDITOR
+        return AssetDatabase.LoadAssetAtPath<Sprite>("Assets/souce/main_sources/main_stageProgress_bar.png");
+#else
+        return null;
+#endif
+    }
+
+    private Sprite GetStageProgressNormalMonsterSprite()
+    {
+        if (stageProgressNormalMonsterSprite != null)
+            return stageProgressNormalMonsterSprite;
+
+#if UNITY_EDITOR
+        return AssetDatabase.LoadAssetAtPath<Sprite>("Assets/souce/main_sources/main_main_stageProgress_normalMontser.png");
+#else
+        return null;
+#endif
+    }
+
+    private Sprite GetStageProgressBossMonsterSprite()
+    {
+        if (stageProgressBossMonsterSprite != null)
+            return stageProgressBossMonsterSprite;
+
+#if UNITY_EDITOR
+        return AssetDatabase.LoadAssetAtPath<Sprite>("Assets/souce/main_sources/main_main_stageProgress_bossMontser.png");
 #else
         return null;
 #endif

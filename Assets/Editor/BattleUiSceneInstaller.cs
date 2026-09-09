@@ -22,12 +22,14 @@ public static class BattleUiSceneInstaller
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         }
 
-        BattleHudUI normalUi = GetOrCreateUi<BattleHudUI>(canvas.transform, NormalUiName);
-        normalUi.BuildPreviewInEditor();
+        BattleHudUI normalUi = GetOrCreateUi<BattleHudUI>(canvas.transform, NormalUiName, out bool createdNormalUi);
+        if (createdNormalUi || normalUi.transform.childCount == 0)
+            normalUi.BuildPreviewInEditor();
         normalUi.gameObject.SetActive(true);
 
-        BattleStandingFocusController focusUi = GetOrCreateUi<BattleStandingFocusController>(canvas.transform, FocusUiName);
-        focusUi.BuildPreviewInEditor(true);
+        BattleStandingFocusController focusUi = GetOrCreateUi<BattleStandingFocusController>(canvas.transform, FocusUiName, out bool createdFocusUi);
+        if (createdFocusUi || focusUi.transform.childCount == 0)
+            focusUi.BuildPreviewInEditor(false);
         focusUi.gameObject.SetActive(false);
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -35,7 +37,7 @@ public static class BattleUiSceneInstaller
         Debug.Log("Battle UI installed. Toggle '전투 UI - 일반' and '전투 UI - 확대' in the Hierarchy.");
     }
 
-    private static T GetOrCreateUi<T>(Transform parent, string objectName) where T : Component
+    private static T GetOrCreateUi<T>(Transform parent, string objectName, out bool created) where T : Component
     {
         T[] existingComponents = Object.FindObjectsByType<T>(FindObjectsInactive.Include);
         for (int i = 0; i < existingComponents.Length; i++)
@@ -44,6 +46,7 @@ public static class BattleUiSceneInstaller
             {
                 Stretch(existingComponents[i].GetComponent<RectTransform>());
                 existingComponents[i].transform.SetParent(parent, false);
+                created = false;
                 return existingComponents[i];
             }
         }
@@ -51,6 +54,7 @@ public static class BattleUiSceneInstaller
         GameObject go = new GameObject(objectName, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         Stretch(go.GetComponent<RectTransform>());
+        created = true;
         return go.AddComponent<T>();
     }
 

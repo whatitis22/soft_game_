@@ -10,6 +10,18 @@ using UnityEditor;
 [ExecuteAlways]
 public class BattleStandingFocusController : MonoBehaviour
 {
+    private const string PreviewRootName = "전투 UI - 확대";
+    private const string FocusUiRootName = "Battle Focus UI";
+    private const string FocusShadowRootName = "Battle Focus Shadow";
+    private const string FocusCloseClickBoxName = "Battle Focus Close Click Box";
+    private static readonly string[] StatsTextNames =
+    {
+        "Stats Text Red",
+        "Stats Text Green",
+        "Stats Text Blue",
+        "Stats Text Score",
+    };
+
     public static BattleStandingFocusController Instance { get; private set; }
 
     [Header("Camera")]
@@ -19,6 +31,7 @@ public class BattleStandingFocusController : MonoBehaviour
     [SerializeField] private float focusScreenOffsetRight = 45f;
     [SerializeField] private float focusWorldOffsetY = -20f;
     [SerializeField, Min(0.01f)] private float transitionSeconds = 0.28f;
+    [SerializeField] private Vector2 focusCloseClickBoxDefaultSize = new Vector2(3f, 6f);
 
     [Header("UI")]
     [SerializeField] private Canvas targetCanvas;
@@ -40,6 +53,7 @@ public class BattleStandingFocusController : MonoBehaviour
     private RectTransform root;
     private TMP_Text titleText;
     private TMP_Text statsText;
+    private TMP_Text[] statsValueTexts;
     private TMP_Text gimmickText;
     private Button[] skillButtons;
     private TMP_Text[] skillButtonLabels;
@@ -49,6 +63,10 @@ public class BattleStandingFocusController : MonoBehaviour
     private CardDrawPopupController cardPopupController;
     private BattleHudUI battleHudUi;
     private RectTransform previewContainer;
+    private GameObject focusCloseClickBoxObject;
+    private BoxCollider focusCloseClickBoxWorldCollider;
+    private BoxCollider2D focusCloseClickBoxCollider;
+    private bool focusCloseClickBoxIsAuthored;
 
     private BattlePlayerStanding focusedStanding;
     private Vector3 originalCameraPosition;
@@ -56,6 +74,7 @@ public class BattleStandingFocusController : MonoBehaviour
     private float originalFieldOfView;
     private bool hasCameraSnapshot;
     private Coroutine cameraRoutine;
+    private BattleCameraMoveRunner cameraMoveRunner;
     private int selectedSkillIndex;
 
     public static BattleStandingFocusController GetOrCreate()
@@ -133,10 +152,7 @@ public class BattleStandingFocusController : MonoBehaviour
             return;
 
         if (focusedStanding == standing)
-        {
-            ClearFocus();
             return;
-        }
 
         Focus(standing);
     }
@@ -165,12 +181,16 @@ public class BattleStandingFocusController : MonoBehaviour
 
         focusedStanding = standing;
         selectedSkillIndex = 0;
+        EnsureFocusCloseClickBox();
+        PositionFocusCloseClickBox(standing);
+        SetFocusCloseClickBoxActive(true);
         SetLocalCardHandHidden(true);
         SetBattleHudHidden(true);
         shadowRoot.gameObject.SetActive(true);
         root.gameObject.SetActive(true);
         shadowRoot.SetAsLastSibling();
         root.SetAsLastSibling();
+        focusCloseClickBoxObject.transform.SetAsLastSibling();
         RefreshFocusedUi();
 
         Vector3 focusPoint = standing.transform.position + Vector3.up * focusWorldOffsetY;
@@ -187,6 +207,7 @@ public class BattleStandingFocusController : MonoBehaviour
         SetLocalCardHandHidden(false);
         SetBattleHudHidden(false);
         focusedStanding = null;
+        SetFocusCloseClickBoxActive(false);
 
         if (shadowRoot != null)
             shadowRoot.gameObject.SetActive(false);
@@ -195,7 +216,19 @@ public class BattleStandingFocusController : MonoBehaviour
             root.gameObject.SetActive(false);
 
         if (targetCamera != null && hasCameraSnapshot)
-            StartCameraMove(originalCameraPosition, originalCameraRotation, originalFieldOfView);
+        {
+            bool usesExternalRunner = StartCameraMove(
+                originalCameraPosition,
+                originalCameraRotation,
+                originalFieldOfView,
+                clearSnapshotOnComplete: true,
+                deactivatePreviewOnComplete: IsPreviewRoot());
+
+            if (usesExternalRunner && IsPreviewRoot())
+                gameObject.SetActive(false);
+
+            return;
+        }
 
         hasCameraSnapshot = false;
 
@@ -237,6 +270,100 @@ public class BattleStandingFocusController : MonoBehaviour
             battleHudUi = FindAnyObjectByType<BattleHudUI>(FindObjectsInactive.Include);
     }
 
+    private void DisableShadowCloseButton()
+    {
+        if (shadowRoot == null)
+            return;
+
+        Button closeButton = shadowRoot.GetComponent<Button>();
+        if (closeButton != null)
+            closeButton.enabled = false;
+    }
+
+    private void EnsureFocusCloseClickBox()
+    {
+        if (focusCloseClickBoxObject == null)
+        {
+            focusCloseClickBoxObject = FindFocusCloseClickBoxObject();
+            focusCloseClickBoxIsAuthored = focusCloseClickBoxObject != null;
+            if (focusCloseClickBoxObject == null)
+            {
+                focusCloseClickBoxObject = new GameObject(FocusCloseClickBoxName);
+                focusCloseClickBoxIsAuthored = false;
+            }
+        }
+
+        if (focusCloseClickBoxWorldCollider == null)
+            focusCloseClickBoxWorldCollider = focusCloseClickBoxObject.GetComponent<BoxCollider>();
+
+        if (focusCloseClickBoxCollider == null)
+            focusCloseClickBoxCollider = focusCloseClickBoxObject.GetComponent<BoxCollider2D>();
+
+        if (focusCloseClickBoxWorldCollider == null && focusCloseClickBoxCollider == null)
+        {
+            focusCloseClickBoxWorldCollider = focusCloseClickBoxObject.AddComponent<BoxCollider>();
+            focusCloseClickBoxWorldCollider.size = new Vector3(focusCloseClickBoxDefaultSize.x, focusCloseClickBoxDefaultSize.y, 0.2f);
+        }
+
+        Image clickBoxImage = focusCloseClickBoxObject.GetComponent<Image>();
+        if (focusCloseClickBoxObject.GetComponent<RectTransform>() != null)
+        {
+            if (clickBoxImage == null)
+                clickBoxImage = focusCloseClickBoxObject.AddComponent<Image>();
+
+            clickBoxImage.color = Color.clear;
+            clickBoxImage.raycastTarget = true;
+        }
+
+        if (focusCloseClickBoxWorldCollider != null)
+            focusCloseClickBoxWorldCollider.isTrigger = true;
+
+        if (focusCloseClickBoxCollider != null)
+            focusCloseClickBoxCollider.isTrigger = true;
+
+        BattleFocusCloseClickBox clickBox = focusCloseClickBoxObject.GetComponent<BattleFocusCloseClickBox>();
+        if (clickBox == null)
+            clickBox = focusCloseClickBoxObject.AddComponent<BattleFocusCloseClickBox>();
+
+        clickBox.Bind(this);
+        focusCloseClickBoxObject.SetActive(false);
+    }
+
+    private GameObject FindFocusCloseClickBoxObject()
+    {
+        Transform[] transforms = FindObjectsByType<Transform>(FindObjectsInactive.Include);
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            Transform candidate = transforms[i];
+            if (candidate != null && candidate.name == FocusCloseClickBoxName)
+                return candidate.gameObject;
+        }
+
+        return null;
+    }
+
+    private void PositionFocusCloseClickBox(BattlePlayerStanding standing)
+    {
+        if (focusCloseClickBoxObject == null || standing == null)
+            return;
+
+        if (focusCloseClickBoxIsAuthored)
+            return;
+
+        Vector3 position = standing.transform.position;
+        if (targetCamera != null)
+            position -= targetCamera.transform.forward * 0.1f;
+
+        focusCloseClickBoxObject.transform.position = position;
+        focusCloseClickBoxObject.transform.rotation = Quaternion.identity;
+    }
+
+    private void SetFocusCloseClickBoxActive(bool active)
+    {
+        if (focusCloseClickBoxObject != null)
+            focusCloseClickBoxObject.SetActive(active);
+    }
+
     private void SetLocalCardHandHidden(bool hidden)
     {
         if (cardPopupController == null)
@@ -262,14 +389,18 @@ public class BattleStandingFocusController : MonoBehaviour
 
         if (transform.childCount > 0)
         {
-            shadowRoot = FindDirectRect("Battle Focus Shadow");
-            root = FindDirectRect("Battle Focus UI");
+            shadowRoot = FindDirectRect(FocusShadowRootName);
+            root = FindDirectRect(FocusUiRootName);
             if (root != null)
             {
                 CacheAuthoredUi();
+                DisableShadowCloseButton();
                 return;
             }
         }
+
+        if (TryUseExternalAuthoredUi())
+            return;
 
         if (targetCanvas == null)
         {
@@ -282,7 +413,7 @@ public class BattleStandingFocusController : MonoBehaviour
 
         Transform uiParent = GetUiParent();
 
-        shadowRoot = CreateRect("Battle Focus Shadow", uiParent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        shadowRoot = CreateRect(FocusShadowRootName, uiParent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         shadowRoot.gameObject.SetActive(false);
 
         Image dim = shadowRoot.gameObject.AddComponent<Image>();
@@ -290,11 +421,7 @@ public class BattleStandingFocusController : MonoBehaviour
         dim.color = new Color(0f, 0f, 0f, 1f);
         dim.raycastTarget = true;
 
-        Button closeButton = shadowRoot.gameObject.AddComponent<Button>();
-        closeButton.transition = Selectable.Transition.None;
-        closeButton.onClick.AddListener(ClearFocus);
-
-        root = CreateRect("Battle Focus UI", uiParent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        root = CreateRect(FocusUiRootName, uiParent, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         root.gameObject.SetActive(false);
 
         CreatePanel("Job Inform", root, new Vector2(0f, 0.818f), new Vector2(0.21f, 1f), Vector2.zero, Vector2.zero, GetInformJobSprite());
@@ -336,8 +463,7 @@ public class BattleStandingFocusController : MonoBehaviour
         Stretch(statsTitle.rectTransform, 0f, 0f, 0f, 0f);
 
         RectTransform statsPanel = CreatePanel("Stats", root, new Vector2(0.60f, 0.79f), new Vector2(0.98f, 0.915f), new Vector2(21.99995f, -1f), new Vector2(-201.6001f, -1f), GetInformScoreboardSprite());
-        statsText = CreateText("Stats Text", statsPanel, string.Empty, 34, TextAlignmentOptions.Center);
-        Stretch(statsText.rectTransform, 34f, 20f, 5.999998f, 0f);
+        CreateStatsTexts(statsPanel);
         statsTitleTab.SetAsLastSibling();
 
         skillButtons = new Button[3];
@@ -351,10 +477,76 @@ public class BattleStandingFocusController : MonoBehaviour
         Stretch(gimmickText.rectTransform, 36f, 28f, 30f, 22f);
     }
 
+    private bool TryUseExternalAuthoredUi()
+    {
+        RectTransform externalRoot = FindBestExternalFocusUi();
+        if (externalRoot == null)
+            return false;
+
+        root = externalRoot;
+        shadowRoot = FindSiblingRect(root, FocusShadowRootName);
+        if (shadowRoot == null)
+            shadowRoot = FindFirstExternalRect(FocusShadowRootName);
+
+        CacheAuthoredUi();
+        DisableShadowCloseButton();
+
+        return true;
+    }
+
+    private RectTransform FindBestExternalFocusUi()
+    {
+        RectTransform[] rects = FindObjectsByType<RectTransform>(FindObjectsInactive.Include);
+        RectTransform best = null;
+        int bestScore = int.MinValue;
+
+        for (int i = 0; i < rects.Length; i++)
+        {
+            RectTransform candidate = rects[i];
+            if (candidate == null || candidate.name != FocusUiRootName || candidate.transform.IsChildOf(transform))
+                continue;
+
+            int score = ScoreExternalFocusUi(candidate);
+            if (score > bestScore)
+            {
+                best = candidate;
+                bestScore = score;
+            }
+        }
+
+        return best;
+    }
+
+    private int ScoreExternalFocusUi(RectTransform candidate)
+    {
+        int score = candidate.childCount;
+
+        if (targetCanvas != null && candidate.transform.parent == targetCanvas.transform)
+            score += 100;
+
+        if (FindSiblingRect(candidate, FocusShadowRootName) != null)
+            score += 20;
+
+        if (FindChildRecursive(candidate, "Job Inform") != null)
+            score += 10;
+
+        if (FindChildRecursive(candidate, "Card Status") != null)
+            score += 10;
+
+        if (FindChildRecursive(candidate, "Stats") != null)
+            score += 10;
+
+        if (FindChildRecursive(candidate, "Gimmick") != null)
+            score += 10;
+
+        return score;
+    }
+
     private void CacheAuthoredUi()
     {
         titleText = FindText("Title");
         statsText = FindText("Stats Text");
+        CacheStatsTextBoxes();
         gimmickText = FindText("Gimmick Text");
 
         skillButtons = new Button[3];
@@ -396,6 +588,35 @@ public class BattleStandingFocusController : MonoBehaviour
             Transform child = transform.GetChild(i);
             if (child != null && child.name == childName)
                 return child.GetComponent<RectTransform>();
+        }
+
+        return null;
+    }
+
+    private RectTransform FindSiblingRect(RectTransform siblingOf, string siblingName)
+    {
+        if (siblingOf == null || siblingOf.parent == null)
+            return null;
+
+        Transform parent = siblingOf.parent;
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            if (child != null && child.name == siblingName)
+                return child.GetComponent<RectTransform>();
+        }
+
+        return null;
+    }
+
+    private RectTransform FindFirstExternalRect(string objectName)
+    {
+        RectTransform[] rects = FindObjectsByType<RectTransform>(FindObjectsInactive.Include);
+        for (int i = 0; i < rects.Length; i++)
+        {
+            RectTransform candidate = rects[i];
+            if (candidate != null && candidate.name == objectName && !candidate.transform.IsChildOf(transform))
+                return candidate;
         }
 
         return null;
@@ -458,7 +679,7 @@ public class BattleStandingFocusController : MonoBehaviour
 
     private bool IsPreviewRoot()
     {
-        return string.Equals(gameObject.name, "전투 UI - 확대", System.StringComparison.Ordinal);
+        return string.Equals(gameObject.name, PreviewRootName, System.StringComparison.Ordinal);
     }
 
     private void RefreshFocusedUi()
@@ -475,14 +696,7 @@ public class BattleStandingFocusController : MonoBehaviour
         int green = player != null ? player.CrystalGreen.Value : 0;
         int score = red + blue + green;
 
-        SetText(statsText, $"{red}          {green}          {blue}      {score}점");
-        if (player != null && player.IsDefenderCustomer.Value)
-        {
-            string blocked = player.DefenderDebtBlockedThisStage.Value ? " / debt blocked" : string.Empty;
-            if (statsText != null)
-                statsText.text += $"\nNetra customer / debt {player.DefenderDebt.Value}{blocked}";
-        }
-
+        SetStatsTexts(red, green, blue, score, player);
         RefreshSkillPanel(player);
 
         for (int i = 0; i < cardImages.Length; i++)
@@ -515,8 +729,7 @@ public class BattleStandingFocusController : MonoBehaviour
         if (titleText != null)
             titleText.text = "Akaneru 의 숫자 상황";
 
-        if (statsText != null)
-            statsText.text = "0          0          0      0점";
+        SetStatsTexts(0, 0, 0, 0, null);
 
         RefreshSkillPanel(null);
 
@@ -540,6 +753,70 @@ public class BattleStandingFocusController : MonoBehaviour
                 cardOutlineImages[i].color = cardOutlineImages[i].sprite != null ? Color.white : Color.clear;
             }
         }
+    }
+
+    private void CreateStatsTexts(RectTransform statsPanel)
+    {
+        statsValueTexts = new TMP_Text[StatsTextNames.Length];
+        for (int i = 0; i < statsValueTexts.Length; i++)
+        {
+            statsValueTexts[i] = CreateText(StatsTextNames[i], statsPanel, string.Empty, 34, TextAlignmentOptions.Center);
+            SetDefaultStatsTextRect(statsValueTexts[i].rectTransform, i);
+        }
+    }
+
+    private void CacheStatsTextBoxes()
+    {
+        statsValueTexts = new TMP_Text[StatsTextNames.Length];
+        for (int i = 0; i < statsValueTexts.Length; i++)
+            statsValueTexts[i] = FindText(StatsTextNames[i]);
+
+        if (statsValueTexts[0] == null)
+            statsValueTexts[0] = statsText;
+    }
+
+    private void SetStatsTexts(int red, int green, int blue, int score, NetworkPlayerState player)
+    {
+        if (statsValueTexts == null || statsValueTexts.Length != StatsTextNames.Length)
+            CacheStatsTextBoxes();
+
+        if (HasSplitStatsTexts())
+        {
+            SetText(statsValueTexts[0], red.ToString());
+            SetText(statsValueTexts[1], green.ToString());
+            SetText(statsValueTexts[2], blue.ToString());
+
+            string scoreText = $"{score}점";
+            if (player != null && player.IsDefenderCustomer.Value)
+            {
+                string blocked = player.DefenderDebtBlockedThisStage.Value ? " / debt blocked" : string.Empty;
+                scoreText += $"\nNetra customer / debt {player.DefenderDebt.Value}{blocked}";
+            }
+
+            SetText(statsValueTexts[3], scoreText);
+            return;
+        }
+
+        SetText(statsText, $"{red}          {green}          {blue}      {score}점");
+        if (player != null && player.IsDefenderCustomer.Value && statsText != null)
+        {
+            string blocked = player.DefenderDebtBlockedThisStage.Value ? " / debt blocked" : string.Empty;
+            statsText.text += $"\nNetra customer / debt {player.DefenderDebt.Value}{blocked}";
+        }
+    }
+
+    private bool HasSplitStatsTexts()
+    {
+        if (statsValueTexts == null || statsValueTexts.Length != StatsTextNames.Length)
+            return false;
+
+        for (int i = 0; i < statsValueTexts.Length; i++)
+        {
+            if (statsValueTexts[i] == null)
+                return false;
+        }
+
+        return true;
     }
 
     private Sprite GetSharedCardFrontSprite(BattlePlayerStanding standing, int cardValue)
@@ -642,15 +919,56 @@ public class BattleStandingFocusController : MonoBehaviour
         skillButtonLabels[index] = tab.GetComponentInChildren<TMP_Text>(true);
     }
 
-    private void StartCameraMove(Vector3 position, Quaternion rotation, float fieldOfView)
+    private bool StartCameraMove(
+        Vector3 position,
+        Quaternion rotation,
+        float fieldOfView,
+        bool clearSnapshotOnComplete = false,
+        bool deactivatePreviewOnComplete = false)
     {
+        BattleCameraMoveRunner runner = GetCameraMoveRunner();
+        if (runner != null)
+        {
+            cameraRoutine = null;
+            runner.StartMove(
+                this,
+                targetCamera,
+                position,
+                rotation,
+                fieldOfView,
+                transitionSeconds,
+                clearSnapshotOnComplete,
+                deactivatePreviewOnComplete);
+            return true;
+        }
+
         if (cameraRoutine != null)
             StopCoroutine(cameraRoutine);
 
-        cameraRoutine = StartCoroutine(MoveCamera(position, rotation, fieldOfView));
+        cameraRoutine = StartCoroutine(MoveCamera(position, rotation, fieldOfView, clearSnapshotOnComplete, deactivatePreviewOnComplete));
+        return false;
     }
 
-    private IEnumerator MoveCamera(Vector3 position, Quaternion rotation, float fieldOfView)
+    private BattleCameraMoveRunner GetCameraMoveRunner()
+    {
+        if (targetCamera == null)
+            return null;
+
+        if (cameraMoveRunner == null)
+            cameraMoveRunner = targetCamera.GetComponent<BattleCameraMoveRunner>();
+
+        if (cameraMoveRunner == null)
+            cameraMoveRunner = targetCamera.gameObject.AddComponent<BattleCameraMoveRunner>();
+
+        return cameraMoveRunner;
+    }
+
+    private IEnumerator MoveCamera(
+        Vector3 position,
+        Quaternion rotation,
+        float fieldOfView,
+        bool clearSnapshotOnComplete,
+        bool deactivatePreviewOnComplete)
     {
         Vector3 startPosition = targetCamera.transform.position;
         Quaternion startRotation = targetCamera.transform.rotation;
@@ -671,6 +989,23 @@ public class BattleStandingFocusController : MonoBehaviour
         targetCamera.transform.rotation = rotation;
         targetCamera.fieldOfView = fieldOfView;
         cameraRoutine = null;
+
+        if (clearSnapshotOnComplete)
+            hasCameraSnapshot = false;
+
+        if (deactivatePreviewOnComplete)
+            gameObject.SetActive(false);
+    }
+
+    internal void CompleteCameraMove(bool clearSnapshotOnComplete, bool deactivatePreviewOnComplete)
+    {
+        cameraRoutine = null;
+
+        if (clearSnapshotOnComplete)
+            hasCameraSnapshot = false;
+
+        if (deactivatePreviewOnComplete && gameObject.activeSelf)
+            gameObject.SetActive(false);
     }
 
     private RectTransform CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax, Sprite backgroundSprite = null)
@@ -710,6 +1045,20 @@ public class BattleStandingFocusController : MonoBehaviour
         tmp.raycastTarget = false;
         tmp.textWrappingMode = TextWrappingModes.Normal;
         return tmp;
+    }
+
+    private static void SetDefaultStatsTextRect(RectTransform rect, int index)
+    {
+        if (rect == null)
+            return;
+
+        float left = 34f;
+        float right = 5.999998f;
+        float width = 1f / StatsTextNames.Length;
+        rect.anchorMin = new Vector2(index * width, 0f);
+        rect.anchorMax = new Vector2((index + 1) * width, 1f);
+        rect.offsetMin = new Vector2(index == 0 ? left : 0f, 0f);
+        rect.offsetMax = new Vector2(index == StatsTextNames.Length - 1 ? -right : 0f, -20f);
     }
 
     private RectTransform CreateRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
@@ -792,5 +1141,77 @@ public class BattleStandingFocusController : MonoBehaviour
 
         public string Title { get; }
         public string Description { get; }
+    }
+}
+
+public class BattleCameraMoveRunner : MonoBehaviour
+{
+    private Coroutine moveRoutine;
+
+    public void StartMove(
+        BattleStandingFocusController owner,
+        Camera targetCamera,
+        Vector3 position,
+        Quaternion rotation,
+        float fieldOfView,
+        float transitionSeconds,
+        bool clearSnapshotOnComplete,
+        bool deactivatePreviewOnComplete)
+    {
+        if (moveRoutine != null)
+            StopCoroutine(moveRoutine);
+
+        moveRoutine = StartCoroutine(MoveCamera(
+            owner,
+            targetCamera,
+            position,
+            rotation,
+            fieldOfView,
+            transitionSeconds,
+            clearSnapshotOnComplete,
+            deactivatePreviewOnComplete));
+    }
+
+    private IEnumerator MoveCamera(
+        BattleStandingFocusController owner,
+        Camera targetCamera,
+        Vector3 position,
+        Quaternion rotation,
+        float fieldOfView,
+        float transitionSeconds,
+        bool clearSnapshotOnComplete,
+        bool deactivatePreviewOnComplete)
+    {
+        if (targetCamera == null)
+        {
+            moveRoutine = null;
+            if (owner != null)
+                owner.CompleteCameraMove(clearSnapshotOnComplete, deactivatePreviewOnComplete);
+            yield break;
+        }
+
+        Vector3 startPosition = targetCamera.transform.position;
+        Quaternion startRotation = targetCamera.transform.rotation;
+        float startFieldOfView = targetCamera.fieldOfView;
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.01f, transitionSeconds);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            targetCamera.transform.position = Vector3.Lerp(startPosition, position, t);
+            targetCamera.transform.rotation = Quaternion.Slerp(startRotation, rotation, t);
+            targetCamera.fieldOfView = Mathf.Lerp(startFieldOfView, fieldOfView, t);
+            yield return null;
+        }
+
+        targetCamera.transform.position = position;
+        targetCamera.transform.rotation = rotation;
+        targetCamera.fieldOfView = fieldOfView;
+        moveRoutine = null;
+
+        if (owner != null)
+            owner.CompleteCameraMove(clearSnapshotOnComplete, deactivatePreviewOnComplete);
     }
 }
