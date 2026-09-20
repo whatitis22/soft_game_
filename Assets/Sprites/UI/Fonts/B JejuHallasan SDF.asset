@@ -132,7 +132,7 @@ Material:
     - _TextureHeight: 512
     - _TextureWidth: 512
     - _UVSec: 0
-    - _UnderlayDilate: 1
+    - _UnderlayDilate: 0.75
     - _UnderlayOffsetX: 0
     - _UnderlayOffsetY: 0
     - _UnderlaySoftness: 0
@@ -153,7 +153,7 @@ Material:
     - _ReflectFaceColor: {r: 0, g: 0, b: 0, a: 1}
     - _ReflectOutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 1}
+    - _UnderlayColor: {r: 0.76052475, g: 0.20507877, b: 0.009134057, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &11400000
