@@ -10,7 +10,7 @@ using Sirenix.OdinInspector;
 //  최상위 UI 오브젝트에 붙여 자식 UIAnimationHandler들을 의미 단위로 관리하는 베이스 컨트롤러
 // ==============================================================================
 
-public class UIAnimationBaseController : MonoBehaviour, IPlayableMedia
+public class UIAnimationBaseController : SerializedMonoBehaviour, IPlayableMedia
 {
     // --------------------------------------------------------------------------
     //  ● Title

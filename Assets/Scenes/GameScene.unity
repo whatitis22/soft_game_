@@ -4484,9 +4484,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 525842594}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbdfd82c6e68ec14e978c99ffd1acd30, type: 3}
+  m_Script: {fileID: 11500000, guid: ca0d5a18264e9824d9dd2edf4681fb26, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationBaseController
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreboardController
   _label: 
   _onPlay:
     m_PersistentCalls:
@@ -4498,7 +4498,31 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _debugMode: 0
-  _handlers: []
+  _handlers:
+  - {fileID: 1375135745}
+  - {fileID: 1969749028}
+  - {fileID: 1154755202}
+  - {fileID: 404693950}
+  - {fileID: 1526931598}
+  - {fileID: 2025485496}
+  - {fileID: 422558969}
+  - {fileID: 827315396}
+  - {fileID: 1907857125}
+  - {fileID: 369754838}
+  - {fileID: 425424995}
+  _score: 0
+  _redGemGetAnimaion: {fileID: 0}
+  _redGemLostAnimaion: {fileID: 0}
+  _greenGemGetAnimaion: {fileID: 0}
+  _greenGemLostAnimaion: {fileID: 0}
+  _blueGemGetAnimaion: {fileID: 0}
+  _blueGemLostAnimaion: {fileID: 0}
+  _scoreUpAnimaion: {fileID: 0}
+  _scoreDownAnimaion: {fileID: 0}
+  _redGemText: {fileID: 0}
+  _blueGemText: {fileID: 0}
+  _greenGemText: {fileID: 0}
+  _scoreText: {fileID: 0}
 --- !u!1 &533136973
 GameObject:
   m_ObjectHideFlags: 0
