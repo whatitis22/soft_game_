@@ -969,7 +969,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -27.5, y: -63.7}
-  m_SizeDelta: {x: -225, y: 50}
+  m_SizeDelta: {x: -225, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &148021927
 MonoBehaviour:
@@ -991,7 +991,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: WagaTonoKana
+  m_text: Kuribo70
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
@@ -1018,7 +1018,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26.9
+  m_fontSize: 26.85
   m_fontSizeBase: 27.5
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1035,7 +1035,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 0
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
@@ -2301,6 +2301,7 @@ GameObject:
   m_Component:
   - component: {fileID: 301008144}
   - component: {fileID: 301008145}
+  - component: {fileID: 301008146}
   m_Layer: 5
   m_Name: ScoreboardHub
   m_TagString: Untagged
@@ -2325,7 +2326,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 78.9}
+  m_AnchoredPosition: {x: 0, y: 75.7}
   m_SizeDelta: {x: 80, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &301008145
@@ -2354,6 +2355,52 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &301008146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301008143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6778606dd25c4b509b525aab2ca39ec0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreboardControllerKeyboardTester
+  controller: {fileID: 525842596}
+  findTargetOnAwake: 1
+  applyInitialPlayerInfoOnStart: 1
+  gemStep: 1
+  scoreStep: 10
+  rankStep: 1
+  useShiftMultiplier: 1
+  shiftMultiplier: 5
+  currentClass: 2
+  nicknames:
+  - "\uB2C9\uB124\uC784\uC740\uC5EC\uB35F\uAE00\uC790"
+  - NicknameTest
+  - LongName12
+  pingValues:
+  - 40
+  - 120
+  - 220
+  addRedGemKey: 41
+  addGreenGemKey: 42
+  addBlueGemKey: 43
+  removeRedGemKey: 31
+  removeGreenGemKey: 37
+  removeBlueGemKey: 19
+  addScoreKey: 63
+  removeScoreKey: 64
+  rankUpKey: 61
+  rankDownKey: 62
+  nextClassKey: 17
+  nextNicknameKey: 28
+  nextPingKey: 30
+  resetKey: 32
+  helpKey: 22
+  logActions: 1
+  logHelpOnStart: 1
 --- !u!1 &318534855
 GameObject:
   m_ObjectHideFlags: 0
@@ -3800,7 +3847,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 99
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_sharedMaterial: {fileID: 1477902866}
@@ -3827,7 +3874,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25.05
+  m_fontSize: 26.85
   m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4487,6 +4534,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca0d5a18264e9824d9dd2edf4681fb26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreboardController
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
   _label: 
   _onPlay:
     m_PersistentCalls:
@@ -4510,19 +4566,50 @@ MonoBehaviour:
   - {fileID: 1907857125}
   - {fileID: 369754838}
   - {fileID: 425424995}
+  _class: 1
+  _nickname: "\uB2C9\uB124\uC784\uC740\uC5F4\uB450\uAE00\uC790"
+  _ping: 0
+  _redGemAmount: 0
+  _greenGemAmount: 0
+  _blueGemAmount: 0
   _score: 0
-  _redGemGetAnimaion: {fileID: 0}
-  _redGemLostAnimaion: {fileID: 0}
-  _greenGemGetAnimaion: {fileID: 0}
-  _greenGemLostAnimaion: {fileID: 0}
-  _blueGemGetAnimaion: {fileID: 0}
-  _blueGemLostAnimaion: {fileID: 0}
-  _scoreUpAnimaion: {fileID: 0}
-  _scoreDownAnimaion: {fileID: 0}
-  _redGemText: {fileID: 0}
-  _blueGemText: {fileID: 0}
-  _greenGemText: {fileID: 0}
-  _scoreText: {fileID: 0}
+  _playerCount: 1
+  _currentRank: 1
+  _redGemGetAnimation: {fileID: 1969749028}
+  _redGemLostAnimation: {fileID: 1154755202}
+  _greenGemGetAnimation: {fileID: 404693950}
+  _greenGemLostAnimation: {fileID: 1526931598}
+  _blueGemGetAnimation: {fileID: 2025485496}
+  _blueGemLostAnimation: {fileID: 422558969}
+  _scoreGetAnimation: {fileID: 827315396}
+  _scoreLostAnimation: {fileID: 1907857125}
+  _rankUpAnimation: {fileID: 369754838}
+  _rankDownAnimation: {fileID: 425424995}
+  _adventurerClassIconImage: {fileID: 1630695056}
+  _adventurerClassIconSprites:
+  - {fileID: 21300000, guid: 76bac9ff43860b24fa3ec2389d5a8340, type: 3}
+  - {fileID: 21300000, guid: 7f032e3bde694944e86e0777237b2bc7, type: 3}
+  - {fileID: 21300000, guid: 0cb0d40a8d9dcf645b8795f51cbe99b5, type: 3}
+  - {fileID: 21300000, guid: f4209ec430146024baca5b5d1d484f64, type: 3}
+  - {fileID: 21300000, guid: 872963cdf9582274ba43ea7f8a6fdd63, type: 3}
+  - {fileID: 21300000, guid: 9f5bdfe66b9ed404ab920c6ca1067115, type: 3}
+  - {fileID: 21300000, guid: 6306708bb6ce43a46922cc4f687e8ae1, type: 3}
+  - {fileID: 21300000, guid: 76bac9ff43860b24fa3ec2389d5a8340, type: 3}
+  _nicknameTMP: {fileID: 148021927}
+  _pingStatusImage: {fileID: 1578967475}
+  _goodStatusSprite: {fileID: 21300000, guid: 8a1eed0e1f81a1d488d7a608f8ece90b, type: 3}
+  _normalStatusSprite: {fileID: 21300000, guid: 5448e56e6b3033149937d864129837b3, type: 3}
+  _badStatusSprite: {fileID: 21300000, guid: c99c12d0fb84e3748a2ca3f108427967, type: 3}
+  _pingStatusTMP: {fileID: 130637660}
+  _redGemTMP: {fileID: 2074868360}
+  _greenGemTMP: {fileID: 425732813}
+  _blueGemTMP: {fileID: 1188371711}
+  _scoreTMP: {fileID: 1829755083}
+  _backgroundImage: {fileID: 602177094}
+  _1stBackGroundSprite: {fileID: 21300000, guid: 790ff32d65118e94b964172c7c988311, type: 3}
+  _2ndBackGroundSprite: {fileID: 21300000, guid: b94c10990fa7b6e44875e72dd83c82d8, type: 3}
+  _3rdBackGroundSprite: {fileID: 21300000, guid: 7f3d6b317cb2a2b4bb5f54258efc6a62, type: 3}
+  _defaultBackGroundSprite: {fileID: 21300000, guid: f8e275f061a13b342973dee281f7d091, type: 3}
 --- !u!1 &533136973
 GameObject:
   m_ObjectHideFlags: 0
@@ -10868,7 +10955,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 99
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_sharedMaterial: {fileID: 1485903818}
@@ -10895,7 +10982,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25.05
+  m_fontSize: 26.85
   m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -13728,7 +13815,7 @@ GameObject:
   - component: {fileID: 1578967477}
   - component: {fileID: 1578967476}
   m_Layer: 0
-  m_Name: ConnectionStatusImage
+  m_Name: PingStatusImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13751,7 +13838,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -106.899994, y: -65.7}
+  m_AnchoredPosition: {x: -109.5, y: -65.7}
   m_SizeDelta: {x: 20, y: 21}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1578967475
@@ -13835,7 +13922,7 @@ GameObject:
   - component: {fileID: 1630695059}
   - component: {fileID: 1630695057}
   m_Layer: 0
-  m_Name: ClassIconImage
+  m_Name: AdventurerClassIconImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15471,7 +15558,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 124.1, y: 65.9}
+  m_AnchoredPosition: {x: 122.3, y: 65.9}
   m_SizeDelta: {x: -318, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1829755083
@@ -15494,7 +15581,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 999pt
+  m_text: 300pt
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e8fb1094e08f08747813008f58e6ffce, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: e8fb1094e08f08747813008f58e6ffce, type: 2}
@@ -15521,8 +15608,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25
-  m_fontSizeBase: 25
+  m_fontSize: 27
+  m_fontSizeBase: 27
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -18284,7 +18371,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 99
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b7cfe145ad7f4e9d9f0d9dbbe818579c, type: 2}
   m_sharedMaterial: {fileID: 1790471997}
@@ -18311,7 +18398,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25.05
+  m_fontSize: 26.85
   m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Soft_Squishy_Big_Plan.slnx",
+    "dotnet.defaultSolution": "Unity-MallangPongchu.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
