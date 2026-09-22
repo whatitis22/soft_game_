@@ -2301,7 +2301,6 @@ GameObject:
   m_Component:
   - component: {fileID: 301008144}
   - component: {fileID: 301008145}
-  - component: {fileID: 301008146}
   m_Layer: 5
   m_Name: ScoreboardHub
   m_TagString: Untagged
@@ -2355,52 +2354,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &301008146
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 301008143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6778606dd25c4b509b525aab2ca39ec0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ScoreboardControllerKeyboardTester
-  controller: {fileID: 525842596}
-  findTargetOnAwake: 1
-  applyInitialPlayerInfoOnStart: 1
-  gemStep: 1
-  scoreStep: 10
-  rankStep: 1
-  useShiftMultiplier: 1
-  shiftMultiplier: 5
-  currentClass: 2
-  nicknames:
-  - "\uB2C9\uB124\uC784\uC740\uC5EC\uB35F\uAE00\uC790"
-  - NicknameTest
-  - LongName12
-  pingValues:
-  - 40
-  - 120
-  - 220
-  addRedGemKey: 41
-  addGreenGemKey: 42
-  addBlueGemKey: 43
-  removeRedGemKey: 31
-  removeGreenGemKey: 37
-  removeBlueGemKey: 19
-  addScoreKey: 63
-  removeScoreKey: 64
-  rankUpKey: 61
-  rankDownKey: 62
-  nextClassKey: 17
-  nextNicknameKey: 28
-  nextPingKey: 30
-  resetKey: 32
-  helpKey: 22
-  logActions: 1
-  logHelpOnStart: 1
 --- !u!1 &318534855
 GameObject:
   m_ObjectHideFlags: 0
