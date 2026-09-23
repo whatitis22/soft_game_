@@ -391,6 +391,123 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &49891191
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 49891192}
+  - component: {fileID: 49891193}
+  m_Layer: 0
+  m_Name: MoveImageToEnd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &49891192
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 49891191}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1039920697}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &49891193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 49891191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
+  _label: Move Image To End
+  _target: {fileID: 602177097}
+  _sequenceMode: 0
+  _useMove: 1
+  _useFade: 0
+  _useRotation: 0
+  _useImage: 0
+  _useScale: 0
+  _useText: 0
+  _moveValueMode: 0
+  _moveApplyPresetStartPosition: 1
+  _moveStartPosition: {x: 0, y: 0, z: 0}
+  _moveEndPosition: {x: 0, y: -100, z: 0}
+  _moveOffset: {x: 0, y: 100, z: 0}
+  _moveEase: 5
+  _moveDuration: 0.3
+  _movePreDelay: 0
+  _movePostDelay: 0
+  _rotationValueMode: 0
+  _rotationApplyPresetStartRotation: 0
+  _rotationStartRotation: {x: 0, y: 0, z: 0}
+  _rotationEndRotation: {x: 0, y: 0, z: 0}
+  _rotationOffset: {x: 0, y: 0, z: 0}
+  _rotationMode: 0
+  _rotationEase: 1
+  _rotationDuration: 0
+  _rotationPreDelay: 0
+  _rotationPostDelay: 0
+  _scaleValueMode: 0
+  _scaleApplyPresetStartScale: 1
+  _scaleStartScale: {x: 0.95, y: 0.95, z: 1}
+  _scaleEndScale: {x: 1, y: 1, z: 1}
+  _scaleOffset: {x: 0, y: 0, z: 0}
+  _scaleEase: 24
+  _scaleDuration: 1
+  _scalePreDelay: 0
+  _scalePostDelay: 0
+  _fadeValueMode: 0
+  _fadeApplyPresetStartAlpha: 0
+  _fadeStartAlpha: 0
+  _fadeEndAlpha: 0
+  _fadeOffset: 0
+  _fadeEase: 1
+  _fadeDuration: 0
+  _fadePreDelay: 0
+  _fadePostDelay: 0
+  _imageChangeSprite: 0
+  _imageSprite: {fileID: 0}
+  _imageChangeDeltaSize: 0
+  _imageDeltaSizeMode: 0
+  _imageCustomDeltaSize: {x: 0, y: 0}
+  _imageChangeColor: 0
+  _imageApplyPresetStartColor: 0
+  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageEase: 1
+  _imageDuration: 0
+  _imagePreDelay: 0
+  _imagePostDelay: 0
+  _textChangeColor: 0
+  _textApplyPresetStartColor: 0
+  _textStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textChangeAlpha: 0
+  _textAlpha: 1
+  _textEase: 1
+  _textDuration: 0
+  _textPreDelay: 0
+  _textPostDelay: 0
 --- !u!1 &51821852
 GameObject:
   m_ObjectHideFlags: 0
@@ -2335,7 +2452,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 301008143}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
@@ -4470,9 +4587,9 @@ RectTransform:
   - {fileID: 1856920553}
   m_Father: {fileID: 301008144}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 1000, y: -50}
   m_SizeDelta: {x: 410, y: 170}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &525842596
@@ -9385,6 +9502,82 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1038248528}
   m_CullTransparentMesh: 1
+--- !u!1 &1039920696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1039920697}
+  - component: {fileID: 1039920698}
+  m_Layer: 0
+  m_Name: ScoreboardHideEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1039920697
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1039920696}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 49891192}
+  - {fileID: 1207150796}
+  m_Father: {fileID: 1856920553}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1039920698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1039920696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
+  _label: Rank Up Effect
+  _animationPreset:
+  - {fileID: 49891193}
+  - {fileID: 1207150797}
+  _onPlay:
+    m_PersistentCalls:
+      m_Calls: []
+  _onPause:
+    m_PersistentCalls:
+      m_Calls: []
+  _onResume:
+    m_PersistentCalls:
+      m_Calls: []
+  _onStop:
+    m_PersistentCalls:
+      m_Calls: []
+  _onReplay:
+    m_PersistentCalls:
+      m_Calls: []
+  _onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  _onKill:
+    m_PersistentCalls:
+      m_Calls: []
+  _debugMode: 0
 --- !u!1 &1040922772
 GameObject:
   m_ObjectHideFlags: 0
@@ -9966,6 +10159,123 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1062094494}
   m_CullTransparentMesh: 1
+--- !u!1 &1083069954
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1083069955}
+  - component: {fileID: 1083069956}
+  m_Layer: 0
+  m_Name: FadeImageToEnd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1083069955
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083069954}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1375135744}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1083069956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1083069954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
+  _label: Fade Image To End
+  _target: {fileID: 602177097}
+  _sequenceMode: 1
+  _useMove: 0
+  _useFade: 1
+  _useRotation: 0
+  _useImage: 0
+  _useScale: 0
+  _useText: 0
+  _moveValueMode: 1
+  _moveApplyPresetStartPosition: 0
+  _moveStartPosition: {x: 0, y: 0, z: 0}
+  _moveEndPosition: {x: 0, y: 0, z: 0}
+  _moveOffset: {x: 0, y: 100, z: 0}
+  _moveEase: 27
+  _moveDuration: 0.2
+  _movePreDelay: 0
+  _movePostDelay: 0
+  _rotationValueMode: 0
+  _rotationApplyPresetStartRotation: 0
+  _rotationStartRotation: {x: 0, y: 0, z: 0}
+  _rotationEndRotation: {x: 0, y: 0, z: 0}
+  _rotationOffset: {x: 0, y: 0, z: 0}
+  _rotationMode: 0
+  _rotationEase: 1
+  _rotationDuration: 0
+  _rotationPreDelay: 0
+  _rotationPostDelay: 0
+  _scaleValueMode: 0
+  _scaleApplyPresetStartScale: 1
+  _scaleStartScale: {x: 0.95, y: 0.95, z: 1}
+  _scaleEndScale: {x: 1, y: 1, z: 1}
+  _scaleOffset: {x: 0, y: 0, z: 0}
+  _scaleEase: 24
+  _scaleDuration: 1
+  _scalePreDelay: 0
+  _scalePostDelay: 0
+  _fadeValueMode: 0
+  _fadeApplyPresetStartAlpha: 1
+  _fadeStartAlpha: 0
+  _fadeEndAlpha: 1
+  _fadeOffset: 0
+  _fadeEase: 1
+  _fadeDuration: 0.175
+  _fadePreDelay: 0
+  _fadePostDelay: 0
+  _imageChangeSprite: 0
+  _imageSprite: {fileID: 0}
+  _imageChangeDeltaSize: 0
+  _imageDeltaSizeMode: 0
+  _imageCustomDeltaSize: {x: 0, y: 0}
+  _imageChangeColor: 0
+  _imageApplyPresetStartColor: 0
+  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageEase: 1
+  _imageDuration: 0
+  _imagePreDelay: 0
+  _imagePostDelay: 0
+  _textChangeColor: 0
+  _textApplyPresetStartColor: 0
+  _textStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textChangeAlpha: 0
+  _textAlpha: 1
+  _textEase: 1
+  _textDuration: 0
+  _textPreDelay: 0
+  _textPostDelay: 0
 --- !u!1 &1088299870
 GameObject:
   m_ObjectHideFlags: 0
@@ -10338,6 +10648,123 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1135393088
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1135393089}
+  - component: {fileID: 1135393090}
+  m_Layer: 0
+  m_Name: MoveImageToEnd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1135393089
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135393088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1375135744}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1135393090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135393088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
+  _label: Move Image To End
+  _target: {fileID: 602177097}
+  _sequenceMode: 0
+  _useMove: 1
+  _useFade: 0
+  _useRotation: 0
+  _useImage: 0
+  _useScale: 0
+  _useText: 0
+  _moveValueMode: 0
+  _moveApplyPresetStartPosition: 1
+  _moveStartPosition: {x: 0, y: -100, z: 0}
+  _moveEndPosition: {x: 0, y: 0, z: 0}
+  _moveOffset: {x: 0, y: 100, z: 0}
+  _moveEase: 27
+  _moveDuration: 0.3
+  _movePreDelay: 0
+  _movePostDelay: 0
+  _rotationValueMode: 0
+  _rotationApplyPresetStartRotation: 0
+  _rotationStartRotation: {x: 0, y: 0, z: 0}
+  _rotationEndRotation: {x: 0, y: 0, z: 0}
+  _rotationOffset: {x: 0, y: 0, z: 0}
+  _rotationMode: 0
+  _rotationEase: 1
+  _rotationDuration: 0
+  _rotationPreDelay: 0
+  _rotationPostDelay: 0
+  _scaleValueMode: 0
+  _scaleApplyPresetStartScale: 1
+  _scaleStartScale: {x: 0.95, y: 0.95, z: 1}
+  _scaleEndScale: {x: 1, y: 1, z: 1}
+  _scaleOffset: {x: 0, y: 0, z: 0}
+  _scaleEase: 24
+  _scaleDuration: 1
+  _scalePreDelay: 0
+  _scalePostDelay: 0
+  _fadeValueMode: 0
+  _fadeApplyPresetStartAlpha: 0
+  _fadeStartAlpha: 0
+  _fadeEndAlpha: 0
+  _fadeOffset: 0
+  _fadeEase: 1
+  _fadeDuration: 0
+  _fadePreDelay: 0
+  _fadePostDelay: 0
+  _imageChangeSprite: 0
+  _imageSprite: {fileID: 0}
+  _imageChangeDeltaSize: 0
+  _imageDeltaSizeMode: 0
+  _imageCustomDeltaSize: {x: 0, y: 0}
+  _imageChangeColor: 0
+  _imageApplyPresetStartColor: 0
+  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageEase: 1
+  _imageDuration: 0
+  _imagePreDelay: 0
+  _imagePostDelay: 0
+  _textChangeColor: 0
+  _textApplyPresetStartColor: 0
+  _textStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textChangeAlpha: 0
+  _textAlpha: 1
+  _textEase: 1
+  _textDuration: 0
+  _textPreDelay: 0
+  _textPostDelay: 0
 --- !u!1 &1146129650
 GameObject:
   m_ObjectHideFlags: 0
@@ -11016,6 +11443,123 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!1 &1207150795
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1207150796}
+  - component: {fileID: 1207150797}
+  m_Layer: 0
+  m_Name: FadeImageToEnd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1207150796
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1207150795}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1039920697}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1207150797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1207150795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
+  _label: Fade Image To End
+  _target: {fileID: 602177097}
+  _sequenceMode: 1
+  _useMove: 0
+  _useFade: 1
+  _useRotation: 0
+  _useImage: 0
+  _useScale: 0
+  _useText: 0
+  _moveValueMode: 1
+  _moveApplyPresetStartPosition: 0
+  _moveStartPosition: {x: 0, y: 0, z: 0}
+  _moveEndPosition: {x: 0, y: 0, z: 0}
+  _moveOffset: {x: 0, y: 100, z: 0}
+  _moveEase: 27
+  _moveDuration: 0.2
+  _movePreDelay: 0
+  _movePostDelay: 0
+  _rotationValueMode: 0
+  _rotationApplyPresetStartRotation: 0
+  _rotationStartRotation: {x: 0, y: 0, z: 0}
+  _rotationEndRotation: {x: 0, y: 0, z: 0}
+  _rotationOffset: {x: 0, y: 0, z: 0}
+  _rotationMode: 0
+  _rotationEase: 1
+  _rotationDuration: 0
+  _rotationPreDelay: 0
+  _rotationPostDelay: 0
+  _scaleValueMode: 0
+  _scaleApplyPresetStartScale: 1
+  _scaleStartScale: {x: 0.95, y: 0.95, z: 1}
+  _scaleEndScale: {x: 1, y: 1, z: 1}
+  _scaleOffset: {x: 0, y: 0, z: 0}
+  _scaleEase: 24
+  _scaleDuration: 1
+  _scalePreDelay: 0
+  _scalePostDelay: 0
+  _fadeValueMode: 0
+  _fadeApplyPresetStartAlpha: 1
+  _fadeStartAlpha: 1
+  _fadeEndAlpha: 0
+  _fadeOffset: 0
+  _fadeEase: 1
+  _fadeDuration: 0.175
+  _fadePreDelay: 0
+  _fadePostDelay: 0
+  _imageChangeSprite: 0
+  _imageSprite: {fileID: 0}
+  _imageChangeDeltaSize: 0
+  _imageDeltaSizeMode: 0
+  _imageCustomDeltaSize: {x: 0, y: 0}
+  _imageChangeColor: 0
+  _imageApplyPresetStartColor: 0
+  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageEase: 1
+  _imageDuration: 0
+  _imagePreDelay: 0
+  _imagePostDelay: 0
+  _textChangeColor: 0
+  _textApplyPresetStartColor: 0
+  _textStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textChangeAlpha: 0
+  _textAlpha: 1
+  _textEase: 1
+  _textDuration: 0
+  _textPreDelay: 0
+  _textPostDelay: 0
 --- !u!1 &1235541129
 GameObject:
   m_ObjectHideFlags: 0
@@ -12347,7 +12891,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1407474799}
+  - {fileID: 1135393089}
+  - {fileID: 1083069955}
   m_Father: {fileID: 1856920553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -12369,7 +12914,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
   _label: Rank Up Effect
   _animationPreset:
-  - {fileID: 1407474800}
+  - {fileID: 1135393090}
+  - {fileID: 1083069956}
   _onPlay:
     m_PersistentCalls:
       m_Calls: []
@@ -12392,123 +12938,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _debugMode: 0
---- !u!1 &1407474798
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1407474799}
-  - component: {fileID: 1407474800}
-  m_Layer: 0
-  m_Name: PunchTextScale
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1407474799
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1407474798}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1375135744}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1407474800
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1407474798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
-  _label: Punch Image Scale
-  _target: {fileID: 602177097}
-  _sequenceMode: 0
-  _useMove: 1
-  _useFade: 0
-  _useRotation: 0
-  _useImage: 0
-  _useScale: 0
-  _useText: 0
-  _moveValueMode: 1
-  _moveApplyPresetStartPosition: 0
-  _moveStartPosition: {x: 0, y: 0, z: 0}
-  _moveEndPosition: {x: 0, y: 0, z: 0}
-  _moveOffset: {x: 0, y: 0, z: 0}
-  _moveEase: 1
-  _moveDuration: 0
-  _movePreDelay: 0
-  _movePostDelay: 0
-  _rotationValueMode: 0
-  _rotationApplyPresetStartRotation: 0
-  _rotationStartRotation: {x: 0, y: 0, z: 0}
-  _rotationEndRotation: {x: 0, y: 0, z: 0}
-  _rotationOffset: {x: 0, y: 0, z: 0}
-  _rotationMode: 0
-  _rotationEase: 1
-  _rotationDuration: 0
-  _rotationPreDelay: 0
-  _rotationPostDelay: 0
-  _scaleValueMode: 0
-  _scaleApplyPresetStartScale: 1
-  _scaleStartScale: {x: 0.95, y: 0.95, z: 1}
-  _scaleEndScale: {x: 1, y: 1, z: 1}
-  _scaleOffset: {x: 0, y: 0, z: 0}
-  _scaleEase: 24
-  _scaleDuration: 1
-  _scalePreDelay: 0
-  _scalePostDelay: 0
-  _fadeValueMode: 0
-  _fadeApplyPresetStartAlpha: 0
-  _fadeStartAlpha: 0
-  _fadeEndAlpha: 0
-  _fadeOffset: 0
-  _fadeEase: 1
-  _fadeDuration: 0
-  _fadePreDelay: 0
-  _fadePostDelay: 0
-  _imageChangeSprite: 0
-  _imageSprite: {fileID: 0}
-  _imageChangeDeltaSize: 0
-  _imageDeltaSizeMode: 0
-  _imageCustomDeltaSize: {x: 0, y: 0}
-  _imageChangeColor: 0
-  _imageApplyPresetStartColor: 0
-  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
-  _imageColor: {r: 1, g: 1, b: 1, a: 1}
-  _imageEase: 1
-  _imageDuration: 0
-  _imagePreDelay: 0
-  _imagePostDelay: 0
-  _textChangeColor: 0
-  _textApplyPresetStartColor: 0
-  _textStartColor: {r: 1, g: 1, b: 1, a: 1}
-  _textColor: {r: 1, g: 1, b: 1, a: 1}
-  _textChangeAlpha: 0
-  _textAlpha: 1
-  _textEase: 1
-  _textDuration: 0
-  _textPreDelay: 0
-  _textPostDelay: 0
 --- !u!1 &1435716240
 GameObject:
   m_ObjectHideFlags: 0
@@ -16010,6 +16439,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1375135744}
+  - {fileID: 1039920697}
   - {fileID: 1969749027}
   - {fileID: 1154755201}
   - {fileID: 404693949}
