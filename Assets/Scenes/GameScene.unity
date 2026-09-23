@@ -2452,7 +2452,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 301008143}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
@@ -2945,7 +2945,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Rank Up Effect
   _animationPreset:
   - {fileID: 1882762050}
   _onPlay:
@@ -2969,7 +2968,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &374036609
 GameObject:
   m_ObjectHideFlags: 0
@@ -3402,7 +3400,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Green Gem Get Effect
   _animationPreset:
   - {fileID: 1146129652}
   _onPlay:
@@ -3426,7 +3423,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &406488853
 GameObject:
   m_ObjectHideFlags: 0
@@ -3754,7 +3750,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Blue Gem Lost Effect
   _animationPreset:
   - {fileID: 193855947}
   - {fileID: 51821854}
@@ -3779,7 +3774,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &425424993
 GameObject:
   m_ObjectHideFlags: 0
@@ -3831,7 +3825,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Rank Down Effect
   _animationPreset:
   - {fileID: 513985654}
   - {fileID: 433058658}
@@ -3857,7 +3850,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &425732811
 GameObject:
   m_ObjectHideFlags: 0
@@ -4350,7 +4342,7 @@ MonoBehaviour:
   _movePostDelay: 0
   _rotationValueMode: 0
   _rotationApplyPresetStartRotation: 1
-  _rotationStartRotation: {x: 0, y: 0, z: 4}
+  _rotationStartRotation: {x: 0, y: 0, z: 2}
   _rotationEndRotation: {x: 0, y: 0, z: 0}
   _rotationOffset: {x: 0, y: 0, z: 0}
   _rotationMode: 0
@@ -4562,6 +4554,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 525842595}
+  - component: {fileID: 525842597}
   - component: {fileID: 525842596}
   m_Layer: 5
   m_Name: Scoreboard (1)
@@ -4587,9 +4580,9 @@ RectTransform:
   - {fileID: 1856920553}
   m_Father: {fileID: 301008144}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1000, y: -50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 410, y: 170}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &525842596
@@ -4604,38 +4597,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca0d5a18264e9824d9dd2edf4681fb26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreboardController
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  _label: 
-  _onPlay:
-    m_PersistentCalls:
-      m_Calls: []
-  _onShow:
-    m_PersistentCalls:
-      m_Calls: []
-  _onHide:
-    m_PersistentCalls:
-      m_Calls: []
-  _debugMode: 0
-  _handlers:
-  - {fileID: 1375135745}
-  - {fileID: 1969749028}
-  - {fileID: 1154755202}
-  - {fileID: 404693950}
-  - {fileID: 1526931598}
-  - {fileID: 2025485496}
-  - {fileID: 422558969}
-  - {fileID: 827315396}
-  - {fileID: 1907857125}
-  - {fileID: 369754838}
-  - {fileID: 425424995}
   _class: 1
   _nickname: "\uB2C9\uB124\uC784\uC740\uC5F4\uB450\uAE00\uC790"
   _ping: 0
@@ -4643,8 +4604,8 @@ MonoBehaviour:
   _greenGemAmount: 0
   _blueGemAmount: 0
   _score: 0
-  _playerCount: 1
-  _currentRank: 1
+  _playerCount: 5
+  _currentRank: 4
   _redGemGetAnimation: {fileID: 1969749028}
   _redGemLostAnimation: {fileID: 1154755202}
   _greenGemGetAnimation: {fileID: 404693950}
@@ -4680,6 +4641,26 @@ MonoBehaviour:
   _2ndBackGroundSprite: {fileID: 21300000, guid: b94c10990fa7b6e44875e72dd83c82d8, type: 3}
   _3rdBackGroundSprite: {fileID: 21300000, guid: 7f3d6b317cb2a2b4bb5f54258efc6a62, type: 3}
   _defaultBackGroundSprite: {fileID: 21300000, guid: f8e275f061a13b342973dee281f7d091, type: 3}
+--- !u!114 &525842597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525842594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbdfd82c6e68ec14e978c99ffd1acd30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationShowHideController
+  _onShow:
+    m_PersistentCalls:
+      m_Calls: []
+  _onHide:
+    m_PersistentCalls:
+      m_Calls: []
+  _showHandler: {fileID: 1375135745}
+  _hideHandler: {fileID: 1039920698}
 --- !u!1 &533136973
 GameObject:
   m_ObjectHideFlags: 0
@@ -5161,8 +5142,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 910000002}
   - {fileID: 1454352365}
+  - {fileID: 910000002}
   - {fileID: 2105128917}
   - {fileID: 2016017363}
   - {fileID: 910000012}
@@ -6073,6 +6054,123 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &761041883
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 761041884}
+  - component: {fileID: 761041885}
+  m_Layer: 0
+  m_Name: PunchTextColor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &761041884
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 761041883}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 827315395}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &761041885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 761041883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c259a6305e841542a21ce95e6bcd262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIAnimationStep
+  _label: Punch Text Scale
+  _target: {fileID: 1829755085}
+  _sequenceMode: 1
+  _useMove: 0
+  _useFade: 0
+  _useRotation: 0
+  _useImage: 0
+  _useScale: 0
+  _useText: 1
+  _moveValueMode: 0
+  _moveApplyPresetStartPosition: 0
+  _moveStartPosition: {x: 0, y: 0, z: 0}
+  _moveEndPosition: {x: 0, y: 0, z: 0}
+  _moveOffset: {x: 0, y: 0, z: 0}
+  _moveEase: 1
+  _moveDuration: 0
+  _movePreDelay: 0
+  _movePostDelay: 0
+  _rotationValueMode: 0
+  _rotationApplyPresetStartRotation: 0
+  _rotationStartRotation: {x: 0, y: 0, z: 0}
+  _rotationEndRotation: {x: 0, y: 0, z: 0}
+  _rotationOffset: {x: 0, y: 0, z: 0}
+  _rotationMode: 0
+  _rotationEase: 1
+  _rotationDuration: 0
+  _rotationPreDelay: 0
+  _rotationPostDelay: 0
+  _scaleValueMode: 0
+  _scaleApplyPresetStartScale: 1
+  _scaleStartScale: {x: 0.85, y: 0.85, z: 1}
+  _scaleEndScale: {x: 1, y: 1, z: 1}
+  _scaleOffset: {x: 0, y: 0, z: 0}
+  _scaleEase: 24
+  _scaleDuration: 1
+  _scalePreDelay: 0
+  _scalePostDelay: 0
+  _fadeValueMode: 0
+  _fadeApplyPresetStartAlpha: 0
+  _fadeStartAlpha: 0
+  _fadeEndAlpha: 0
+  _fadeOffset: 0
+  _fadeEase: 1
+  _fadeDuration: 0
+  _fadePreDelay: 0
+  _fadePostDelay: 0
+  _imageChangeSprite: 0
+  _imageSprite: {fileID: 0}
+  _imageChangeDeltaSize: 0
+  _imageDeltaSizeMode: 0
+  _imageCustomDeltaSize: {x: 0, y: 0}
+  _imageChangeColor: 0
+  _imageApplyPresetStartColor: 0
+  _imageStartColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageColor: {r: 1, g: 1, b: 1, a: 1}
+  _imageEase: 1
+  _imageDuration: 0
+  _imagePreDelay: 0
+  _imagePostDelay: 0
+  _textChangeColor: 1
+  _textApplyPresetStartColor: 0
+  _textStartColor: {r: 0.8773585, g: 0.13656996, b: 0.13656996, a: 1}
+  _textColor: {r: 1, g: 0.7882353, b: 0.4117647, a: 1}
+  _textChangeAlpha: 0
+  _textAlpha: 1
+  _textEase: 3
+  _textDuration: 0
+  _textPreDelay: 0
+  _textPostDelay: 0
 --- !u!1 &777169592
 GameObject:
   m_ObjectHideFlags: 0
@@ -6285,6 +6383,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1296797645}
+  - {fileID: 761041884}
   m_Father: {fileID: 1856920553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6304,9 +6403,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Score Get Effect
   _animationPreset:
   - {fileID: 1296797646}
+  - {fileID: 761041885}
   _onPlay:
     m_PersistentCalls:
       m_Calls: []
@@ -6328,7 +6427,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &830967388
 GameObject:
   m_ObjectHideFlags: 0
@@ -9552,7 +9650,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Rank Up Effect
   _animationPreset:
   - {fileID: 49891193}
   - {fileID: 1207150797}
@@ -9577,7 +9674,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1040922772
 GameObject:
   m_ObjectHideFlags: 0
@@ -10932,7 +11028,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Red Gem Lost Effect
   _animationPreset:
   - {fileID: 553181806}
   - {fileID: 1055061766}
@@ -10957,7 +11052,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1177608523
 GameObject:
   m_ObjectHideFlags: 0
@@ -12912,7 +13006,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Rank Up Effect
   _animationPreset:
   - {fileID: 1135393090}
   - {fileID: 1083069956}
@@ -12937,7 +13030,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1435716240
 GameObject:
   m_ObjectHideFlags: 0
@@ -13044,7 +13136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1454352365
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13767,7 +13859,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Green Gem Lost Effect
   _animationPreset:
   - {fileID: 1721868399}
   - {fileID: 1536794048}
@@ -13792,7 +13883,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1536794046
 GameObject:
   m_ObjectHideFlags: 0
@@ -15931,7 +16021,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1829755081}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.031608813, w: 0.99950033}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15963,7 +16053,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 300pt
+  m_text: 0pt
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e8fb1094e08f08747813008f58e6ffce, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: e8fb1094e08f08747813008f58e6ffce, type: 2}
@@ -15972,8 +16062,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4285123071
+  m_fontColor: {r: 1, g: 0.7882353, b: 0.41176474, a: 1}
   m_enableVertexGradient: 1
   m_colorMode: 0
   m_fontColorGradient:
@@ -16920,7 +17010,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Score Lost Effect
   _animationPreset:
   - {fileID: 964112393}
   - {fileID: 1047024159}
@@ -16946,7 +17035,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1923471240
 GameObject:
   m_ObjectHideFlags: 0
@@ -17093,13 +17181,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1928381157}
+  - component: {fileID: 1928381158}
   m_Layer: 5
   m_Name: Systems
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1928381157
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17119,6 +17208,52 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1928381158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928381156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6778606dd25c4b509b525aab2ca39ec0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreboardControllerKeyboardTester
+  controller: {fileID: 525842596}
+  findTargetOnAwake: 1
+  applyInitialPlayerInfoOnStart: 1
+  gemStep: 1
+  scoreStep: 10
+  rankStep: 1
+  useShiftMultiplier: 1
+  shiftMultiplier: 5
+  currentClass: 2
+  nicknames:
+  - "\uBE0C\uB9AC\uC9D3"
+  - Kuribo70
+  - "\uB2C9\uB124\uC784\uC740\uC5F4\uB450\uAE00\uC790"
+  pingValues:
+  - 40
+  - 120
+  - 220
+  addRedGemKey: 41
+  addGreenGemKey: 42
+  addBlueGemKey: 43
+  removeRedGemKey: 31
+  removeGreenGemKey: 37
+  removeBlueGemKey: 19
+  addScoreKey: 63
+  removeScoreKey: 64
+  rankUpKey: 61
+  rankDownKey: 62
+  nextClassKey: 17
+  nextNicknameKey: 28
+  nextPingKey: 30
+  resetKey: 32
+  helpKey: 22
+  logActions: 1
+  logHelpOnStart: 1
 --- !u!1 &1930171239
 GameObject:
   m_ObjectHideFlags: 0
@@ -17555,7 +17690,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Red Gem Get Effect
   _animationPreset:
   - {fileID: 1457076269}
   _onPlay:
@@ -17579,7 +17713,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &1975341496
 GameObject:
   m_ObjectHideFlags: 0
@@ -18396,7 +18529,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4babf48940543f98af0571bb00876e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIAnimationHandler
-  _label: Blue Gem Get Effect
   _animationPreset:
   - {fileID: 2088245891}
   _onPlay:
@@ -18420,7 +18552,6 @@ MonoBehaviour:
   _onKill:
     m_PersistentCalls:
       m_Calls: []
-  _debugMode: 0
 --- !u!1 &2055178878
 GameObject:
   m_ObjectHideFlags: 0
