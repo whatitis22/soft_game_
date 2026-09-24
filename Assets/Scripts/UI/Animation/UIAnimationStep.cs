@@ -6,8 +6,6 @@ using DG.Tweening;
 [Serializable]
 public partial class UIAnimationStep : MonoBehaviour
 {
-    [SerializeField] private string _label;
-
     [TitleGroup("Runtime")]
     [SerializeField] private UIAnimationReferenceHub _target;
     [SerializeField] private TypeUIAnimationSequence _sequenceMode;
@@ -176,7 +174,6 @@ public partial class UIAnimationStep : MonoBehaviour
     [BoxGroup("Text Value"), LabelText("Post Delay"), ShowIf("_useText", true)]
     [SerializeField] private float _textPostDelay = 0f;
 
-    public string Label => string.IsNullOrWhiteSpace(_label) ? name : _label;
     public UIAnimationReferenceHub Target => _target;
     public TypeUIAnimationSequence SequenceMode => _sequenceMode;
     public float EstimatedDuration => CalculateEstimatedDuration();
